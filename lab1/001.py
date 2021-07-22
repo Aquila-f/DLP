@@ -33,7 +33,7 @@ def generate_XOR_eazy():
     return np.array(inputs), np.array(labels).reshape(21, 1)
 
 
-def show_result(x, y, pred_y):
+def show_result(x, y, pred_y,epoch):
     plt.figure(figsize=(10, 5))
     plt.subplot(1, 2, 1)
     plt.title('Ground truth', fontsize=18)
@@ -50,7 +50,7 @@ def show_result(x, y, pred_y):
             plt.plot(x[i][0], x[i][1], 'ro')
         else:
             plt.plot(x[i][0], x[i][1], 'bo')
-    plt.show()
+    plt.savefig('lab1pic/lab1_{}.png'.format(epoch), bbox_inches='tight')
 
 
 def show_resultfinal(x, y, pred_y, learncurve, ty):
@@ -79,7 +79,7 @@ def show_resultfinal(x, y, pred_y, learncurve, ty):
     plt.plot(learncurve)
     plt.xlabel("epoch")
     plt.ylabel("loss")
-    plt.show()
+    plt.savefig('lab1pic/lab1_final.png', bbox_inches='tight')
 
 
 def accu(pred, actual):
@@ -244,7 +244,7 @@ for ep in range(gg.epoch):
         print(predy)
         if (comp != t):
             comp = t
-            show_result(data, label, np.round(predy))
+            show_result(data, label, np.round(predy),ep)
 
 predy = np.array(predylist)
 print("epoch {} loss : {}  accuracy : {:.2f}%".format(ep + 1, gg.learncurve[-1], accu(np.round(predy), label)))
