@@ -158,14 +158,14 @@ for i in range(1,config['Epochs']+1):
         optimizer.step()
     train_accuracy = train_accuracy*100./1080
     
-#     for x, y in test_loader:
-#         x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
-#         pred = model(x)
-#         test_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
-#         test_loss += config['Loss_function'](pred,label)
-#     test_accuracy = test_accuracy*100./1080
+    for xx, yy in test_loader:
+        xx, testlabel = xx.to(device ,dtype = torch.float), yy.to(device ,dtype = torch.long)
+        testpred = model(xx)
+        test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
+        test_loss += config['Loss_function'](testpred,testlabel)
+    test_accuracy = test_accuracy*100./1080
     
-#     test_loss,test_accuracy = calwithlabel(test_loader,model,config['Loss_function'])
+    test_loss,test_accuracy = calwithlabel(test_loader,model,config['Loss_function'])
     
     test_accuracy_list.append(test_accuracy)
     test_loss_list.append(test_loss)
