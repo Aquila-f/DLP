@@ -131,5 +131,5 @@ for i in range(1,config['Epochs']+1):
     ss.append(accuracy)
     if i % printstep == 0:
         print('epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,total_loss,accuracy))
-        
+print(len(ss))
 print(ss)
