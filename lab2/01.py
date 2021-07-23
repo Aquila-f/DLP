@@ -117,10 +117,8 @@ for i in range(1,config['Epochs']+1):
     
     for x, y in train_loader:
         optimizer.zero_grad()
-#         x = x.to(device,dtype=torch.float)
-        x, label = x.to(device ,dtype = torch.long), y.to(device ,dtype = torch.long)
+        x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
         pred = model(x)
-#         print(pred.shape)
         accuracy += torch.max(pred,1)[1].eq(label).sum().item()
         loss = config['Loss_function'](pred,label)
         loss.backward()
