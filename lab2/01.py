@@ -56,8 +56,30 @@ def prep_dataloader(batch_size):
     )
     return train_loader,test_loader
 
+def activation_funcchoose(act_func):
+    if act_func == 'ReLU':
+        return nn.ReLU()
+    elif act_func == 'LeakyReLU':
+        return nn.LeakyReLU()
+    return nn.ELU()
+
+def calwithlabel(test_loadeer,model,lossfunc):
+    test_loss = 0
+    test_accuracy = 0
+    
+    for x, y in test_loadeer:
+        x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
+        pred = model(x)
+        test_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
+        test_loss += lossfunc(pred,label)
+        
+    test_accuracy = test_accuracy*100./1080
+    return test_loss, test_accuracy
+    
+
 class eegNet(nn.Module):
-    def __init__(self):
+    def __init__(self,act_func):
+        self.act_funct = act_func
         super(eegNet,self).__init__()
         self.firstconv = nn.Sequential(
             nn.Conv2d(1, 16, kernel_size=(1,51), stride=(1,1), padding=(0,25), bias=False),
@@ -66,14 +88,16 @@ class eegNet(nn.Module):
         self.depthwiseConv = nn.Sequential(
             nn.Conv2d(16, 32, kernel_size=(2,1), stride=(1,1), groups=16, bias=False),
             nn.BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
-            nn.ELU(alpha=1.0),
+            activation_funcchoose(self.act_funct)
+#             nn.ELU(alpha=1.0),
             nn.AvgPool2d(kernel_size = (1,4), stride=(1,4), padding=0),
             nn.Dropout(0.25)
         )
         self.separableConv = nn.Sequential(
             nn.Conv2d(32, 32, kernel_size=(1,15), stride=(1,1), padding=(0,7), bias=False),
             nn.BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
-            nn.ELU(alpha=1.0),
+            activation_funcchoose(self.act_funct)
+#             nn.ELU(alpha=1.0),
             nn.AvgPool2d(kernel_size = (1,8), stride=(1,8), padding=0),
             nn.Dropout(0.25),
             nn.Flatten()
@@ -98,13 +122,15 @@ config = {
         'lr' : 1e-2
     },
     'Loss_function' : torch.nn.CrossEntropyLoss(),
-    'print_step': 10
+    'print_step': 10,
+    'activation_function' : 'elu'
 }
 
 train_loader,test_loader = prep_dataloader(config['Batch_size'])
-ss = []
+train_accuracy_list = []
+train_loss_list = []
 
-model = eegNet()
+model = eegNet(config['activation_function'])
 model.cuda()
 epoch = config['Epochs']
 # optimizer = config['Optimizer'](model.parameters(), lr = config['Learning_rate'], )
@@ -112,23 +138,30 @@ optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **conf
 printstep = config['print_step']
 
 for i in range(1,config['Epochs']+1):
-    total_loss = 0
-    accuracy = 0
+    train_loss = 0
+    train_accuracy = 0
     
     for x, y in train_loader:
         optimizer.zero_grad()
         x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
         pred = model(x)
-        accuracy += torch.max(pred,1)[1].eq(label).sum().item()
-        print(accuracy)
+        train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
         loss = config['Loss_function'](pred,label)
         loss.backward()
-        total_loss += loss.item()
+        train_loss += loss.item()
         optimizer.step()
-        
-    accuracy = accuracy*100./1080
-    ss.append(accuracy)
+    train_accuracy = train_accuracy*100./1080
+    test_loss,test_accuracy = calwithlabel(test_loader,model,config['Loss_function'])
+    
+    test_accuracy_list.append(test_accuracy)
+    test_loss_list.append(test_loss)
+    train_accuracy_list.append(train_accuracy)
+    train_loss_list.append(train_loss)
+    
+    
     if i % printstep == 0:
-        print('epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,total_loss,accuracy))
-print(len(ss))
-print(ss)
+        print('epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
+print(train_accuracy_list)
+print(train_loss_list)
+print(test_accuracy_list)
+print(test_loss_list)
