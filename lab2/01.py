@@ -64,6 +64,7 @@ def activation_funcchoose(act_func):
     return nn.ELU()
 
 def calwithlabel(test_loadeer,model,lossfunc):
+    model.eval()
     test_loss = 0
     test_accuracy = 0
     
