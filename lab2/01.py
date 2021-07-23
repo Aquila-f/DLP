@@ -44,15 +44,12 @@ def prep_dataloader(batch_size):
         train_dataset,
         batch_size = config['Batch_size'],
         shuffle = True,
-        num_workers = 4
     )
 
     test_dataset = Data.TensorDataset(torch.from_numpy(test_data),torch.from_numpy(test_label))
     test_loader = Data.DataLoader(
         test_dataset,
         batch_size = config['Batch_size'],
-        shuffle = False,
-        num_workers = 4
     )
     return train_loader,test_loader
 
@@ -117,7 +114,7 @@ class eegNet(nn.Module):
 
 config = {
     'Epochs' : 150,
-    'Batch_size' : 32,
+    'Batch_size' : 64,
     'Optimizer' : 'Adam',
     'Optim_hparas':{
         'lr' : 1e-2
