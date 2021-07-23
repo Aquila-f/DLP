@@ -179,3 +179,4 @@ for i in range(1,config['Epochs']+1):
 # print(train_loss_list)
 # print(test_accuracy_list)
 # print(test_loss_list)
+torch.cuda.empty_cache()
