@@ -88,7 +88,7 @@ class eegNet(nn.Module):
         self.depthwiseConv = nn.Sequential(
             nn.Conv2d(16, 32, kernel_size=(2,1), stride=(1,1), groups=16, bias=False),
             nn.BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
-            activation_funcchoose(self.act_funct)
+            activation_funcchoose(self.act_funct),
 #             nn.ELU(alpha=1.0),
             nn.AvgPool2d(kernel_size = (1,4), stride=(1,4), padding=0),
             nn.Dropout(0.25)
@@ -96,7 +96,7 @@ class eegNet(nn.Module):
         self.separableConv = nn.Sequential(
             nn.Conv2d(32, 32, kernel_size=(1,15), stride=(1,1), padding=(0,7), bias=False),
             nn.BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
-            activation_funcchoose(self.act_funct)
+            activation_funcchoose(self.act_funct),
 #             nn.ELU(alpha=1.0),
             nn.AvgPool2d(kernel_size = (1,8), stride=(1,8), padding=0),
             nn.Dropout(0.25),
@@ -123,8 +123,9 @@ config = {
     },
     'Loss_function' : torch.nn.CrossEntropyLoss(),
     'print_step': 10,
-    'activation_function' : 'elu'
+    'activation_function' : 'ELU'
 }
+print('ELU')
 
 train_loader,test_loader = prep_dataloader(config['Batch_size'])
 train_accuracy_list = []
@@ -161,6 +162,7 @@ for i in range(1,config['Epochs']+1):
     
     if i % printstep == 0:
         print('epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
+        
 print(train_accuracy_list)
 print(train_loss_list)
 print(test_accuracy_list)
