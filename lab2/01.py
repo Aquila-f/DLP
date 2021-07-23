@@ -117,7 +117,7 @@ class eegNet(nn.Module):
 
 config = {
     'Epochs' : 150,
-    'Batch_size' : 64,
+    'Batch_size' : 32,
     'Optimizer' : 'Adam',
     'Optim_hparas':{
         'lr' : 1e-2
