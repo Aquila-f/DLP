@@ -10,6 +10,7 @@ from torchsummary import summary
 print(torch.__version__)
 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
+torch.cuda.empty_cache()
 
 def read_bci_data(): 
     
