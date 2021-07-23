@@ -120,6 +120,7 @@ for i in range(1,config['Epochs']+1):
         x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
         pred = model(x)
         accuracy += torch.max(pred,1)[1].eq(label).sum().item()
+        print(accuracy)
         loss = config['Loss_function'](pred,label)
         loss.backward()
         total_loss += loss.item()
