@@ -119,8 +119,11 @@ for i in range(1,config['Epochs']+1):
     for x, y in train_loader:
         print('pass here ,{}'.format(i))
         optimizer.zero_grad()               
+        print('{}-1'.format(i))
         x, label = x.to(device ,dtype = torch.long), y.to(device ,dtype = torch.long)
+        print('{}-2'.format(i))
         pred = model(x.float())
+        print('{}-3'.format(i))
 #         print(pred.shape)
         accuracy += torch.max(pred,1)[1].eq(label).sum().item()
         loss = config['Loss_function'](pred,label)
