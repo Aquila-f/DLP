@@ -144,6 +144,8 @@ printstep = config['print_step']
 for i in range(1,config['Epochs']+1):
     train_loss = 0
     train_accuracy = 0
+    test_loss = 0
+    test_accuracy = 0
     
     for x, y in train_loader:
         optimizer.zero_grad()
@@ -155,7 +157,15 @@ for i in range(1,config['Epochs']+1):
         train_loss += loss.item()
         optimizer.step()
     train_accuracy = train_accuracy*100./1080
-    test_loss,test_accuracy = calwithlabel(test_loader,model,config['Loss_function'])
+    
+    for x, y in test_loader:
+        x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
+        pred = model(x)
+        test_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
+        test_loss += lossfunc(pred,label)
+    test_accuracy = test_accuracy*100./1080
+    
+#     test_loss,test_accuracy = calwithlabel(test_loader,model,config['Loss_function'])
     
     test_accuracy_list.append(test_accuracy)
     test_loss_list.append(test_loss)
