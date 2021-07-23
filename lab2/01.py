@@ -59,7 +59,7 @@ def activation_funcchoose(act_func):
         return nn.ReLU()
     elif act_func == 'LeakyReLU':
         return nn.LeakyReLU()
-    return nn.ELU()
+    return nn.ELU(alpha=1.0)
 
 def calwithlabel(test_loadeer,model,lossfunc):
     model.eval()
@@ -135,9 +135,6 @@ test_loss_list = []
 model = eegNet(config['activation_function'])
 model.cuda()
 
-for layer in model.children():
-    if hasattr(layer, 'reset_parameters'):
-        layer.reset_parameters()
         
 epoch = config['Epochs']
 # optimizer = config['Optimizer'](model.parameters(), lr = config['Learning_rate'], )
@@ -180,7 +177,7 @@ for i in range(1,config['Epochs']+1):
         print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
         print('test  - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
         
-print(train_accuracy_list)
-print(train_loss_list)
-print(test_accuracy_list)
-print(test_loss_list)
+# print(train_accuracy_list)
+# print(train_loss_list)
+# print(test_accuracy_list)
+# print(test_loss_list)
