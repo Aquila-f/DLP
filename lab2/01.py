@@ -134,6 +134,11 @@ test_loss_list = []
 
 model = eegNet(config['activation_function'])
 model.cuda()
+
+for layer in model.children():
+    if hasattr(layer, 'reset_parameters'):
+        layer.reset_parameters()
+        
 epoch = config['Epochs']
 # optimizer = config['Optimizer'](model.parameters(), lr = config['Learning_rate'], )
 optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
@@ -179,4 +184,3 @@ for i in range(1,config['Epochs']+1):
 # print(train_loss_list)
 # print(test_accuracy_list)
 # print(test_loss_list)
-torch.cuda.empty_cache()
