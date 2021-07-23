@@ -11,7 +11,8 @@ print(torch.__version__)
 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
-def read_bci_data():
+def read_bci_data(): 
+    
     S4b_train = np.load('S4b_train.npz')
     X11b_train = np.load('X11b_train.npz')
     S4b_test = np.load('S4b_test.npz')
@@ -34,7 +35,7 @@ def read_bci_data():
     test_data[mask] = np.nanmean(test_data)
 
     print(train_data.shape, train_label.shape, test_data.shape, test_label.shape)
-
+    print('pass read_bci_data')
     return train_data, train_label, test_data, test_label
 
 def prep_dataloader(batch_size):
@@ -54,6 +55,7 @@ def prep_dataloader(batch_size):
         shuffle = False,
         num_workers = 4
     )
+    print('pass prep_dataloader')
     return train_loader,test_loader
 
 class eegNet(nn.Module):
@@ -115,6 +117,7 @@ for i in range(1,config['Epochs']+1):
     accuracy = 0
     
     for x, y in train_loader:
+        print('pass here ,{}'.format(i))
         optimizer.zero_grad()               
         x, label = x.to(device ,dtype = torch.long), y.to(device ,dtype = torch.long)
         pred = model(x.float())
@@ -125,12 +128,12 @@ for i in range(1,config['Epochs']+1):
         total_loss += loss.item()
         optimizer.step()
         ss.append(accuracy)
-        
+        print('pass one')
     #     break
     # total_loss /= len(train_loader)
     accuracy = accuracy*100./1080
     ss.append(accuracy)
-    
+    print('pass 1 epoch')
     if i % printstep == 0:
         print('epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,total_loss,accuracy))
         
