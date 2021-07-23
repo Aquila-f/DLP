@@ -166,10 +166,10 @@ for i in range(1,config['Epochs']+1):
     test_accuracy = test_accuracy*100./1080
     
     
-#     test_accuracy_list.append(test_accuracy)
-#     test_loss_list.append(test_loss)
-#     train_accuracy_list.append(train_accuracy)
-#     train_loss_list.append(train_loss)
+    test_accuracy_list.append(test_accuracy)
+    test_loss_list.append(test_loss)
+    train_accuracy_list.append(train_accuracy)
+    train_loss_list.append(train_loss)
     
     
     if i % printstep == 0:
