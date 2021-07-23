@@ -130,6 +130,8 @@ print('ELU')
 train_loader,test_loader = prep_dataloader(config['Batch_size'])
 train_accuracy_list = []
 train_loss_list = []
+test_accuracy_list = []
+test_loss_list = []
 
 model = eegNet(config['activation_function'])
 model.cuda()
