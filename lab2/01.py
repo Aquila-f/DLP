@@ -126,10 +126,10 @@ config = {
 print('ELU')
 
 train_loader,test_loader = prep_dataloader(config['Batch_size'])
-train_accuracy_list = []
-train_loss_list = []
-test_accuracy_list = []
-test_loss_list = []
+# train_accuracy_list = []
+# train_loss_list = []
+# test_accuracy_list = []
+# test_loss_list = []
 
 model = eegNet(config['activation_function'])
 model.cuda()
@@ -141,7 +141,7 @@ printstep = config['print_step']
 for i in range(1,config['Epochs']+1):
     train_loss = 0
     train_accuracy = 0
-    test_loss = 0
+#     test_loss = 0
     test_accuracy = 0
     
     for x, y in train_loader:
@@ -159,21 +159,21 @@ for i in range(1,config['Epochs']+1):
         xx, testlabel = xx.to(device ,dtype = torch.float), yy.to(device ,dtype = torch.long)
         testpred = model(xx)
         test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
-        test_loss += config['Loss_function'](testpred,testlabel)
+#         test_loss += config['Loss_function'](testpred,testlabel)
     test_accuracy = test_accuracy*100./1080
     
     test_loss,test_accuracy = calwithlabel(test_loader,model,config['Loss_function'])
     
-    test_accuracy_list.append(test_accuracy)
-    test_loss_list.append(test_loss)
-    train_accuracy_list.append(train_accuracy)
-    train_loss_list.append(train_loss)
+#     test_accuracy_list.append(test_accuracy)
+#     test_loss_list.append(test_loss)
+#     train_accuracy_list.append(train_accuracy)
+#     train_loss_list.append(train_loss)
     
     
     if i % printstep == 0:
         print('epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
         
-print(train_accuracy_list)
-print(train_loss_list)
-print(test_accuracy_list)
-print(test_loss_list)
+# print(train_accuracy_list)
+# print(train_loss_list)
+# print(test_accuracy_list)
+# print(test_loss_list)
