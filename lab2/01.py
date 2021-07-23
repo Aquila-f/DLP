@@ -165,7 +165,6 @@ for i in range(1,config['Epochs']+1):
 #         test_loss += config['Loss_function'](testpred,testlabel)
     test_accuracy = test_accuracy*100./1080
     
-    test_loss,test_accuracy = calwithlabel(test_loader,model,config['Loss_function'])
     
 #     test_accuracy_list.append(test_accuracy)
 #     test_loss_list.append(test_loss)
