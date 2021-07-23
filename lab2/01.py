@@ -35,7 +35,6 @@ def read_bci_data():
     test_data[mask] = np.nanmean(test_data)
 
     print(train_data.shape, train_label.shape, test_data.shape, test_label.shape)
-    print('pass read_bci_data')
     return train_data, train_label, test_data, test_label
 
 def prep_dataloader(batch_size):
@@ -118,12 +117,10 @@ for i in range(1,config['Epochs']+1):
     
     for x, y in train_loader:
         print('pass here ,{}'.format(i))
-        optimizer.zero_grad()               
-        print('{}-1'.format(i))
+        optimizer.zero_grad()
+        x = x.to(device,dtype=torch.float)
         x, label = x.to(device ,dtype = torch.long), y.to(device ,dtype = torch.long)
-        print('{}-2'.format(i))
         pred = model(x)
-        print('{}-3'.format(i))
 #         print(pred.shape)
         accuracy += torch.max(pred,1)[1].eq(label).sum().item()
         loss = config['Loss_function'](pred,label)
@@ -131,12 +128,10 @@ for i in range(1,config['Epochs']+1):
         total_loss += loss.item()
         optimizer.step()
         ss.append(accuracy)
-        print('pass one')
     #     break
     # total_loss /= len(train_loader)
     accuracy = accuracy*100./1080
     ss.append(accuracy)
-    print('pass 1 epoch')
     if i % printstep == 0:
         print('epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,total_loss,accuracy))
         
