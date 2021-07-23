@@ -162,7 +162,7 @@ for i in range(1,config['Epochs']+1):
         xx, testlabel = xx.to(device ,dtype = torch.float), yy.to(device ,dtype = torch.long)
         testpred = model(xx)
         test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
-#         test_loss += config['Loss_function'](testpred,testlabel)
+        test_loss += config['Loss_function'](testpred,testlabel)
     test_accuracy = test_accuracy*100./1080
     
     
