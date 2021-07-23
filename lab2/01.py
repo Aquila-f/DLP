@@ -54,7 +54,6 @@ def prep_dataloader(batch_size):
         shuffle = False,
         num_workers = 4
     )
-    print('pass prep_dataloader')
     return train_loader,test_loader
 
 class eegNet(nn.Module):
@@ -106,6 +105,7 @@ train_loader,test_loader = prep_dataloader(config['Batch_size'])
 ss = []
 
 model = eegNet()
+model.cuda()
 epoch = config['Epochs']
 # optimizer = config['Optimizer'](model.parameters(), lr = config['Learning_rate'], )
 optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
@@ -116,9 +116,8 @@ for i in range(1,config['Epochs']+1):
     accuracy = 0
     
     for x, y in train_loader:
-        print('pass here ,{}'.format(i))
         optimizer.zero_grad()
-        x = x.to(device,dtype=torch.float)
+#         x = x.to(device,dtype=torch.float)
         x, label = x.to(device ,dtype = torch.long), y.to(device ,dtype = torch.long)
         pred = model(x)
 #         print(pred.shape)
