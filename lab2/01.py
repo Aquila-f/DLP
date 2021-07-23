@@ -125,9 +125,7 @@ for i in range(1,config['Epochs']+1):
         loss.backward()
         total_loss += loss.item()
         optimizer.step()
-        ss.append(accuracy)
-    #     break
-    # total_loss /= len(train_loader)
+        
     accuracy = accuracy*100./1080
     ss.append(accuracy)
     if i % printstep == 0:
