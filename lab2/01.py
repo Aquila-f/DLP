@@ -221,7 +221,7 @@ for modeltype in config['model']:
                 xx, testlabel = xx.to(device ,dtype = torch.float), yy.to(device ,dtype = torch.long)
                 testpred = model(xx)
                 test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
-                loss2 += config['Loss_function'](testpred,testlabel)
+                loss2 = config['Loss_function'](testpred,testlabel)
                 test_loss += loss2.item()
             test_accuracy = test_accuracy*100./1080
 
