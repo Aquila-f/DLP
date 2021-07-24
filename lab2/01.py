@@ -56,9 +56,9 @@ def prep_dataloader(batch_size):
 
 def activation_funcchoose(act_func):
     if act_func == 'ReLU':
-        return nn.ReLU(alpha=1.0)
+        return nn.ReLU()
     elif act_func == 'LeakyReLU':
-        return nn.LeakyReLU(alpha=1.0)
+        return nn.LeakyReLU()
     return nn.ELU(alpha=1.0)
 
 def calwithlabel(test_loadeer,model,lossfunc):
@@ -124,7 +124,6 @@ config = {
     'print_step': 10,
     'activation_function' : ['ELU','ReLU','LeakyReLU']
 }
-print('ELU')
 
 train_loader,test_loader = prep_dataloader(config['Batch_size'])
 epoch = config['Epochs']
@@ -132,6 +131,7 @@ epoch = config['Epochs']
 printstep = config['print_step']
 
 for activation_function in config['activation_function']:
+    print(activation_function)
     
     train_accuracy_list = []
     # train_loss_list = []
@@ -176,10 +176,13 @@ for activation_function in config['activation_function']:
 
         if i % printstep == 0:
             print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
-            print('test  - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
+#             print('test  - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
     
     df['{}_train'.format(activation_function)] = train_accuracy_list
     df['{}_test'.format(activation_function)] = test_accuracy_list
     
-print(df)
+plt.figure(figsize=(12,8))
+plt.plot(df)
+plt.savefig('01.png')
+
     
