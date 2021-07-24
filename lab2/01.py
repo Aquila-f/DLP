@@ -248,7 +248,8 @@ for modeltype in config['model']:
         print('{}_{},best_test_acc : {}'.format(model.name,activation_function,test_acc_max))
         
         test_acc_max_list.append(test_acc_max)
-    
+        
+    print(test_acc_max_list)
     df_max.loc['{}'.format(model.name)] = test_acc_max_list
     plt.figure(figsize=(9,6))
     plt.plot(df)
