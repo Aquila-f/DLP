@@ -163,14 +163,14 @@ class DeepConvNet(nn.Module):
 
 config = {
     'model' : [eegNet,DeepConvNet],
-    'Epochs' : 300,
+    'Epochs' : 150,
     'Batch_size' : 64,
     'Optimizer' : 'Adam',
     'Optim_hparas':{
-        'lr' : 0.005
+        'lr' : input('lr : ')
     },
     'Loss_function' : torch.nn.CrossEntropyLoss(),
-    'print_step': 20,
+    'print_step': 30,
     'activation_function' : ['ELU','ReLU','LeakyReLU']
 }
 
