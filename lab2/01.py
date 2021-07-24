@@ -129,6 +129,7 @@ train_loader,test_loader = prep_dataloader(config['Batch_size'])
 epoch = config['Epochs']
 # optimizer = config['Optimizer'](model.parameters(), lr = config['Learning_rate'], )
 printstep = config['print_step']
+df = pd.DataFrame()
 
 for activation_function in config['activation_function']:
     print(activation_function)
@@ -137,7 +138,7 @@ for activation_function in config['activation_function']:
     # train_loss_list = []
     test_accuracy_list = []
     # test_loss_list = []
-    df = pd.DataFrame()
+
 
     model = eegNet(activation_function)
     model.cuda()
