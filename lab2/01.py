@@ -182,8 +182,11 @@ for activation_function in config['activation_function']:
     df['{}_train'.format(activation_function)] = train_accuracy_list
     df['{}_test'.format(activation_function)] = test_accuracy_list
     
-plt.figure(figsize=(12,8))
+plt.figure(figsize=(9,6))
 plt.plot(df)
+plt.xlabel("Epoch",fontsize = 12)
+plt.ylabel("Accuracy(%)",fontsize = 12)
+plt.legend(df.columns.values)
 plt.savefig('01.png')
 
     
