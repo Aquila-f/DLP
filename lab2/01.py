@@ -129,7 +129,6 @@ print('ELU')
 train_loader,test_loader = prep_dataloader(config['Batch_size'])
 epoch = config['Epochs']
 # optimizer = config['Optimizer'](model.parameters(), lr = config['Learning_rate'], )
-optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
 printstep = config['print_step']
 
 for activation_function in config['activation_function']:
@@ -142,7 +141,7 @@ for activation_function in config['activation_function']:
 
     model = eegNet(activation_function)
     model.cuda()
-
+    optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
 
     for i in range(1,config['Epochs']+1):
         train_loss = 0
