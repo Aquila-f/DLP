@@ -198,7 +198,7 @@ for modeltype in config['model']:
 
         model = modeltype(activation_function)
         print('{} , {}------------------------------'.format(model.name,activation_function))
-#         model.cuda()
+        model.cuda()
         optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
 
         for i in range(1,config['Epochs']+1):
