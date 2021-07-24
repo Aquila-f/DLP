@@ -183,7 +183,9 @@ df_max = pd.DataFrame(columns = {'ELU':0,'RelU':1,'LeakyReLU':2})
 for modeltype in config['model']:
     
     df = pd.DataFrame()
-
+    test_acc_max_list = []
+    train_acc_max_list = []
+    
     for activation_function in config['activation_function']:
 
         train_accuracy_list = []
@@ -191,8 +193,6 @@ for modeltype in config['model']:
         test_accuracy_list = []
         test_loss_list = []
         
-        test_acc_max_list = []
-        train_acc_max_list = []
         test_acc_max = 0
         train_acc_max = 0
 
@@ -247,7 +247,7 @@ for modeltype in config['model']:
         print('{}_{},best_train_acc : {}'.format(model.name,activation_function,train_acc_max))
         print('{}_{},best_test_acc : {}'.format(model.name,activation_function,test_acc_max))
         
-        print(test_acc_max_list)
+
         
         
     df_max.loc['{}'.format(model.name)] = test_acc_max_list
