@@ -243,13 +243,13 @@ for modeltype in config['model']:
 
         df['{}_{}_train'.format(model.name,activation_function)] = train_accuracy_list
         df['{}_{}_test'.format(model.name,activation_function)] = test_accuracy_list
-        
+        test_acc_max_list.append(test_acc_max)
         print('{}_{},best_train_acc : {}'.format(model.name,activation_function,train_acc_max))
         print('{}_{},best_test_acc : {}'.format(model.name,activation_function,test_acc_max))
         
-        test_acc_max_list.append(test_acc_max)
+        print(test_acc_max_list)
         
-    print(test_acc_max_list)
+        
     df_max.loc['{}'.format(model.name)] = test_acc_max_list
     plt.figure(figsize=(9,6))
     plt.plot(df)
