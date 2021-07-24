@@ -61,19 +61,19 @@ def activation_funcchoose(act_func):
         return nn.LeakyReLU()
     return nn.ELU(alpha=1.0)
 
-def calwithlabel(test_loadeer,model,lossfunc):
-    model.eval()
-    test_loss = 0
-    test_accuracy = 0
+# def calwithlabel(test_loadeer,model,lossfunc):
+#     model.eval()
+#     test_loss = 0
+#     test_accuracy = 0
     
-    for x, y in test_loadeer:
-        x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
-        pred = model(x)
-        test_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
-        test_loss += lossfunc(pred,label)
+#     for x, y in test_loadeer:
+#         x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
+#         pred = model(x)
+#         test_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
+#         test_loss += lossfunc(pred,label)
         
-    test_accuracy = test_accuracy*100./1080
-    return test_loss, test_accuracy
+#     test_accuracy = test_accuracy*100./1080
+#     return test_loss, test_accuracy
     
 
 class eegNet(nn.Module):
@@ -202,7 +202,8 @@ for modeltype in config['model']:
             train_accuracy = 0
             test_loss = 0
             test_accuracy = 0
-
+            
+            model.train()
             for x, y in train_loader:
                 optimizer.zero_grad()
                 x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
@@ -213,7 +214,8 @@ for modeltype in config['model']:
                 train_loss += loss.item()
                 optimizer.step()
             train_accuracy = train_accuracy*100./1080
-
+            
+            model.eval()
             for xx, yy in test_loader:
                 xx, testlabel = xx.to(device ,dtype = torch.float), yy.to(device ,dtype = torch.long)
                 testpred = model(xx)
