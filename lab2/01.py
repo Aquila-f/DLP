@@ -78,7 +78,7 @@ def activation_funcchoose(act_func):
 
 class eegNet(nn.Module):
     def __init__(self,act_func):
-        self.name = 'eegNet'
+        self.name = 'EEGNet'
         self.act_funct = act_func
         super(eegNet,self).__init__()
         self.firstconv = nn.Sequential(
@@ -178,6 +178,7 @@ train_loader,test_loader = prep_dataloader(config['Batch_size'])
 epoch = config['Epochs']
 # optimizer = config['Optimizer'](model.parameters(), lr = config['Learning_rate'], )
 printstep = config['print_step']
+df_max = pd.DataFrame(columns = {'ELU':0,'RelU':1,'LeakyReLU':2})
 
 for modeltype in config['model']:
     
@@ -189,11 +190,14 @@ for modeltype in config['model']:
         train_loss_list = []
         test_accuracy_list = []
         test_loss_list = []
+        
+        test_acc_max_list = []
+        train_acc_max_list = []
         test_acc_max = 0
         train_acc_max = 0
 
         model = modeltype(activation_function)
-        print('{} , {}'.format(model.name,activation_function))
+        print('{} , {}------------------------------'.format(model.name,activation_function))
         model.cuda()
         optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
 
@@ -242,8 +246,10 @@ for modeltype in config['model']:
         
         print('{}_{},best_train_acc : {}'.format(model.name,activation_function,train_acc_max))
         print('{}_{},best_test_acc : {}'.format(model.name,activation_function,test_acc_max))
+        
+        test_acc_max_list.append(test_acc_max)
     
-    
+    df_max['{}'.format(model.name)] = test_acc_max_list
     plt.figure(figsize=(9,6))
     plt.plot(df)
     plt.title(model.name, fontsize=12)
@@ -251,5 +257,5 @@ for modeltype in config['model']:
     plt.ylabel("Accuracy(%)",fontsize = 12)
     plt.legend(df.columns.values)
     plt.savefig('{}.png'.format(model.name))
-
     
+print(df_max)
