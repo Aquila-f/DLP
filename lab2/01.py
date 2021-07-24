@@ -163,14 +163,14 @@ class DeepConvNet(nn.Module):
 
 config = {
     'model' : [eegNet,DeepConvNet],
-    'Epochs' : 150,
+    'Epochs' : 300,
     'Batch_size' : 64,
     'Optimizer' : 'Adam',
     'Optim_hparas':{
         'lr' : 1e-2
     },
     'Loss_function' : torch.nn.CrossEntropyLoss(),
-    'print_step': 10,
+    'print_step': 20,
     'activation_function' : ['ELU','ReLU','LeakyReLU']
 }
 
@@ -249,7 +249,7 @@ for modeltype in config['model']:
         
         test_acc_max_list.append(test_acc_max)
     
-    df_max['{}'.format(model.name)] = test_acc_max_list
+    df_max.loc['{}'.format(model.name)] = test_acc_max_list
     plt.figure(figsize=(9,6))
     plt.plot(df)
     plt.title(model.name, fontsize=12)
