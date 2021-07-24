@@ -184,16 +184,15 @@ for modeltype in config['model']:
     df = pd.DataFrame()
 
     for activation_function in config['activation_function']:
-        print(activation_function)
 
         train_accuracy_list = []
-        # train_loss_list = []
+        train_loss_list = []
         test_accuracy_list = []
-        # test_loss_list = []
+        test_loss_list = []
 
 
         model = modeltype(activation_function)
-        print(model.name)
+        print('{} , {}'.format(model.name,activation_function))
         model.cuda()
         optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
 
@@ -220,14 +219,14 @@ for modeltype in config['model']:
                 xx, testlabel = xx.to(device ,dtype = torch.float), yy.to(device ,dtype = torch.long)
                 testpred = model(xx)
                 test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
-        #         test_loss += config['Loss_function'](testpred,testlabel)
+                test_loss += config['Loss_function'](testpred,testlabel)
             test_accuracy = test_accuracy*100./1080
 
 
             test_accuracy_list.append(test_accuracy)
-        #     test_loss_list.append(test_loss)
+            test_loss_list.append(float(test_loss))
             train_accuracy_list.append(train_accuracy)
-        #     train_loss_list.append(train_loss)
+            train_loss_list.append(float(train_loss))
 
 
             if i % printstep == 0:
