@@ -167,7 +167,7 @@ config = {
     'Batch_size' : 64,
     'Optimizer' : 'Adam',
     'Optim_hparas':{
-        'lr' : 0.008
+        'lr' : 0.005
     },
     'Loss_function' : torch.nn.CrossEntropyLoss(),
     'print_step': 20,
