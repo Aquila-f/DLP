@@ -2,15 +2,15 @@ import numpy as np
 import torch.nn as nn
 import torch.utils.data as Data
 import torch.optim as optim
-import random
+# import random
 import pandas as pd
 from matplotlib import pyplot as plt
 import torch
-from torchsummary import summary
+# from torchsummary import summary
 print(torch.__version__)
 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
-torch.cuda.empty_cache()
+# torch.cuda.empty_cache()
 
 def read_bci_data(): 
     
@@ -88,7 +88,6 @@ class eegNet(nn.Module):
             nn.Conv2d(16, 32, kernel_size=(2,1), stride=(1,1), groups=16, bias=False),
             nn.BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
             activation_funcchoose(self.act_funct),
-#             nn.ELU(alpha=1.0),
             nn.AvgPool2d(kernel_size = (1,4), stride=(1,4), padding=0),
             nn.Dropout(0.25)
         )
@@ -96,7 +95,6 @@ class eegNet(nn.Module):
             nn.Conv2d(32, 32, kernel_size=(1,15), stride=(1,1), padding=(0,7), bias=False),
             nn.BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
             activation_funcchoose(self.act_funct),
-#             nn.ELU(alpha=1.0),
             nn.AvgPool2d(kernel_size = (1,8), stride=(1,8), padding=0),
             nn.Dropout(0.25),
             nn.Flatten()
@@ -112,8 +110,57 @@ class eegNet(nn.Module):
         out = self.classify(out)
         return out
 
+class eegNet1(nn.Module):
+    def __init__(self,act_func):
+        self.act_funct = act_func
+        super(eegNet1,self).__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(1, 25, kernel_size=(1,5)),
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(25, 25, kernel_size=(2,1)),
+            nn.BatchNorm2d(25, eps=1e-5, momentum=0.1),
+            activation_funcchoose(self.act_funct),
+            nn.MaxPool2d(kernel_size=(1,2)),
+            nn.Dropout(0.5)
+        )
+        self.conv3 = nn.Sequential(
+            nn.Conv2d(25, 50, kernel_size=(1,5)),
+            nn.BatchNorm2d(50, eps=1e-5, momentum=0.1),
+            activation_funcchoose(self.act_funct),
+            nn.MaxPool2d(kernel_size=(1,2)),
+            nn.Dropout(0.5)
+        )
+        self.conv4 = nn.Sequential(
+            nn.Conv2d(50, 100, kernel_size=(1,5)),
+            nn.BatchNorm2d(100, eps=1e-5, momentum=0.1),
+            activation_funcchoose(self.act_funct),
+            nn.MaxPool2d(kernel_size=(1,2)),
+            nn.Dropout(0.5)
+        )
+        self.conv5 = nn.Sequential(
+            nn.Conv2d(100, 200, kernel_size=(1,5)),
+            nn.BatchNorm2d(200, eps=1e-5, momentum=0.1),
+            activation_funcchoose(self.act_funct),
+            nn.MaxPool2d(kernel_size=(1,2)),
+            nn.Dropout(0.5),
+            nn.Flatten()
+        )
+        self.classify = nn.Sequential(
+            nn.Linear(in_features=8600, out_features=2, bias=True)
+        )
+        
+    def forward(self,x):
+        out = self.conv1(x)
+        out = self.conv2(out)
+        out = self.conv3(out)
+        out = self.conv4(out)
+        out = self.conv5(out)
+        out = self.classify(out)
+        return out
 
 config = {
+    'model' : eegNet1,
     'Epochs' : 150,
     'Batch_size' : 64,
     'Optimizer' : 'Adam',
@@ -140,7 +187,7 @@ for activation_function in config['activation_function']:
     # test_loss_list = []
 
 
-    model = eegNet(activation_function)
+    model = config['model'](activation_function)
     model.cuda()
     optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
 
