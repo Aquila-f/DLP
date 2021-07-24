@@ -189,7 +189,8 @@ for modeltype in config['model']:
         train_loss_list = []
         test_accuracy_list = []
         test_loss_list = []
-
+        test_acc_max = 0
+        train_acc_max = 0
 
         model = modeltype(activation_function)
         print('{} , {}'.format(model.name,activation_function))
@@ -214,28 +215,35 @@ for modeltype in config['model']:
                 optimizer.step()
             train_accuracy = train_accuracy*100./1080
             
+            
             model.eval()
             for xx, yy in test_loader:
                 xx, testlabel = xx.to(device ,dtype = torch.float), yy.to(device ,dtype = torch.long)
                 testpred = model(xx)
                 test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
-                test_loss += config['Loss_function'](testpred,testlabel)
+                loss2 += config['Loss_function'](testpred,testlabel)
+                test_loss += loss2.item()
             test_accuracy = test_accuracy*100./1080
 
-
+            
             test_accuracy_list.append(test_accuracy)
-            test_loss_list.append(float(test_loss))
+            test_loss_list.append(test_loss)
             train_accuracy_list.append(train_accuracy)
-            train_loss_list.append(float(train_loss))
-
-
+            train_loss_list.append(train_loss)
+            test_acc_max = test_accuracy if test_accuracy > test_acc_max else test_acc_max
+            train_acc_max = train_accuracy if train_accuracy > train_acc_max else train_acc_max
+            
             if i % printstep == 0:
                 print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
     #             print('test  - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
 
-        df['{}_train'.format(activation_function)] = train_accuracy_list
-        df['{}_test'.format(activation_function)] = test_accuracy_list
-
+        df['{}_{}_train'.format(model.name,activation_function)] = train_accuracy_list
+        df['{}_{}_test'.format(model.name,activation_function)] = test_accuracy_list
+        
+        print('{}_{},best_train_acc : {}'.format(model.name,activation_function,train_acc_max))
+        print('{}_{},best_test_acc : {}'.format(model.name,activation_function,test_acc_max))
+    
+    
     plt.figure(figsize=(9,6))
     plt.plot(df)
     plt.title(model.name, fontsize=12)
