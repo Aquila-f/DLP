@@ -78,6 +78,7 @@ def calwithlabel(test_loadeer,model,lossfunc):
 
 class eegNet(nn.Module):
     def __init__(self,act_func):
+        self.name = 'eegNet'
         self.act_funct = act_func
         super(eegNet,self).__init__()
         self.firstconv = nn.Sequential(
@@ -110,10 +111,11 @@ class eegNet(nn.Module):
         out = self.classify(out)
         return out
 
-class eegNet1(nn.Module):
+class DeepConvNet(nn.Module):
     def __init__(self,act_func):
+        self.name = 'DeepConvNet'
         self.act_funct = act_func
-        super(eegNet1,self).__init__()
+        super(DeepConvNet,self).__init__()
         self.conv1 = nn.Sequential(
             nn.Conv2d(1, 25, kernel_size=(1,5)),
         )
@@ -160,7 +162,7 @@ class eegNet1(nn.Module):
         return out
 
 config = {
-    'model' : eegNet1,
+    'model' : [eegNet,DeepConvNet],
     'Epochs' : 150,
     'Batch_size' : 64,
     'Optimizer' : 'Adam',
@@ -176,64 +178,69 @@ train_loader,test_loader = prep_dataloader(config['Batch_size'])
 epoch = config['Epochs']
 # optimizer = config['Optimizer'](model.parameters(), lr = config['Learning_rate'], )
 printstep = config['print_step']
-df = pd.DataFrame()
 
-for activation_function in config['activation_function']:
-    print(activation_function)
+for modeltype in config['model']:
     
-    train_accuracy_list = []
-    # train_loss_list = []
-    test_accuracy_list = []
-    # test_loss_list = []
+    df = pd.DataFrame()
+
+    for activation_function in config['activation_function']:
+        print(activation_function)
+
+        train_accuracy_list = []
+        # train_loss_list = []
+        test_accuracy_list = []
+        # test_loss_list = []
 
 
-    model = config['model'](activation_function)
-    model.cuda()
-    optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
+        model = modeltype(activation_function)
+        print(model.name)
+        model.cuda()
+        optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
 
-    for i in range(1,config['Epochs']+1):
-        train_loss = 0
-        train_accuracy = 0
-        test_loss = 0
-        test_accuracy = 0
+        for i in range(1,config['Epochs']+1):
+            train_loss = 0
+            train_accuracy = 0
+            test_loss = 0
+            test_accuracy = 0
 
-        for x, y in train_loader:
-            optimizer.zero_grad()
-            x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
-            pred = model(x)
-            train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
-            loss = config['Loss_function'](pred,label)
-            loss.backward()
-            train_loss += loss.item()
-            optimizer.step()
-        train_accuracy = train_accuracy*100./1080
+            for x, y in train_loader:
+                optimizer.zero_grad()
+                x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
+                pred = model(x)
+                train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
+                loss = config['Loss_function'](pred,label)
+                loss.backward()
+                train_loss += loss.item()
+                optimizer.step()
+            train_accuracy = train_accuracy*100./1080
 
-        for xx, yy in test_loader:
-            xx, testlabel = xx.to(device ,dtype = torch.float), yy.to(device ,dtype = torch.long)
-            testpred = model(xx)
-            test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
-    #         test_loss += config['Loss_function'](testpred,testlabel)
-        test_accuracy = test_accuracy*100./1080
-
-
-        test_accuracy_list.append(test_accuracy)
-    #     test_loss_list.append(test_loss)
-        train_accuracy_list.append(train_accuracy)
-    #     train_loss_list.append(train_loss)
+            for xx, yy in test_loader:
+                xx, testlabel = xx.to(device ,dtype = torch.float), yy.to(device ,dtype = torch.long)
+                testpred = model(xx)
+                test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
+        #         test_loss += config['Loss_function'](testpred,testlabel)
+            test_accuracy = test_accuracy*100./1080
 
 
-        if i % printstep == 0:
-            print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
-#             print('test  - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
-    
-    df['{}_train'.format(activation_function)] = train_accuracy_list
-    df['{}_test'.format(activation_function)] = test_accuracy_list
-    
-plt.figure(figsize=(9,6))
-plt.plot(df)
-plt.xlabel("Epoch",fontsize = 12)
-plt.ylabel("Accuracy(%)",fontsize = 12)
-plt.legend(df.columns.values)
-plt.savefig('01.png')
+            test_accuracy_list.append(test_accuracy)
+        #     test_loss_list.append(test_loss)
+            train_accuracy_list.append(train_accuracy)
+        #     train_loss_list.append(train_loss)
+
+
+            if i % printstep == 0:
+                print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
+    #             print('test  - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
+
+        df['{}_train'.format(activation_function)] = train_accuracy_list
+        df['{}_test'.format(activation_function)] = test_accuracy_list
+
+    plt.figure(figsize=(9,6))
+    plt.plot(df)
+    plt.title(model.name, fontsize=12)
+    plt.xlabel("Epoch",fontsize = 12)
+    plt.ylabel("Accuracy(%)",fontsize = 12)
+    plt.legend(df.columns.values)
+    plt.savefig('{}.png'.format(model.name))
 
     
