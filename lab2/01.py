@@ -163,7 +163,7 @@ class DeepConvNet(nn.Module):
 
 config = {
     'model' : [eegNet,DeepConvNet],
-    'Epochs' : 150,
+    'Epochs' : 300,
     'Batch_size' : 64,
     'Optimizer' : 'SGD',
     'Optim_hparas':{
@@ -196,7 +196,21 @@ for modeltype in config['model']:
         test_acc_max = 0
         train_acc_max = 0
 
-        model = modeltype(activation_function)
+#         model = modeltype(activation_function)
+#         for param in model.parameters():
+#             print(param.data)
+#             break
+#         torch.save(model.state_dict(),'save')
+#         gg = modeltype(activation_function)
+#         for param in gg.parameters():
+#             print(param.data)
+#             break
+#         gg.load_state_dict(torch.load('save'))
+#         for param in gg.parameters():
+#             print(param.data)
+#             break
+    
+        
         print('{} , {}------------------------------'.format(model.name,activation_function))
         model.cuda()
         optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
@@ -208,6 +222,7 @@ for modeltype in config['model']:
             test_accuracy = 0
             
             model.train()
+        
             for x, y in train_loader:
                 optimizer.zero_grad()
                 x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
