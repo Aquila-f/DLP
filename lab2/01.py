@@ -196,7 +196,8 @@ for modeltype in config['model']:
         test_acc_max = 0
         train_acc_max = 0
 
-#         model = modeltype(activation_function)
+        model = modeltype(activation_function)
+        
 #         for param in model.parameters():
 #             print(param.data)
 #             break
