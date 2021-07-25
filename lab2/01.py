@@ -165,7 +165,7 @@ config = {
     'model' : [eegNet,DeepConvNet],
     'Epochs' : 300,
     'Batch_size' : 64,
-    'Optimizer' : 'Adam',
+    'Optimizer' : str(input('optimizer : ')),
     'Optim_hparas':{
         'lr' : float(input('lr : '))
     },
