@@ -165,7 +165,7 @@ config = {
     'model' : [eegNet,DeepConvNet],
     'Epochs' : 300,
     'Batch_size' : 64,
-    'Optimizer' : 'SGD',
+    'Optimizer' : 'Adam',
     'Optim_hparas':{
         'lr' : float(input('lr : '))
     },
@@ -252,10 +252,12 @@ for modeltype in config['model']:
             train_loss_list.append(train_loss)
             test_acc_max = test_accuracy if test_accuracy > test_acc_max else test_acc_max
             train_acc_max = train_accuracy if train_accuracy > train_acc_max else train_acc_max
+            if train_acc_max > 87 :
+                torch.save(model.state_dict(),'{}_{}_{}'.format(model.name,activation_function,i))
             
             if i % printstep == 0:
                 print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
-    #             print('test  - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
+                print('test  - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
 
         df['{}_{}_train'.format(model.name,activation_function)] = train_accuracy_list
         df['{}_{}_test'.format(model.name,activation_function)] = test_accuracy_list
