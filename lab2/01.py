@@ -73,7 +73,7 @@ def activation_funcchoose(act_func):
 #         test_loss += lossfunc(pred,label)
         
 #     test_accuracy = test_accuracy*100./1080
-#     return test_loss, test_accuracy
+#     return test_loss, test_accuracy df
     
 
 class eegNet(nn.Module):
