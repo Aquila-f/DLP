@@ -73,7 +73,7 @@ def activation_funcchoose(act_func):
 #         test_loss += lossfunc(pred,label)
         
 #     test_accuracy = test_accuracy*100./1080
-#     return test_loss, test_accuracy df
+#     return test_loss, test_accuracy
     
 
 class eegNet(nn.Module):
@@ -252,7 +252,7 @@ for modeltype in config['model']:
             train_loss_list.append(train_loss)
             test_acc_max = test_accuracy if test_accuracy > test_acc_max else test_acc_max
             train_acc_max = train_accuracy if train_accuracy > train_acc_max else train_acc_max
-            if train_acc > 87 and not key:
+            if test_accuracy > 87 and not key:
                 key = True
                 torch.save(model.state_dict(),'{}_{}_{}'.format(model.name,activation_function,i))
             
