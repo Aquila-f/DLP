@@ -223,7 +223,6 @@ for modeltype in config['model']:
             test_accuracy = 0
             
             model.train()
-        
             for x, y in train_loader:
                 optimizer.zero_grad()
                 x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
@@ -253,7 +252,7 @@ for modeltype in config['model']:
             test_acc_max = test_accuracy if test_accuracy > test_acc_max else test_acc_max
             train_acc_max = train_accuracy if train_accuracy > train_acc_max else train_acc_max
             if test_accuracy > 87 and test_accuracy == test_acc_max:
-                torch.save(model.state_dict(),'{}_{}'.format(model.name,activation_function))
+                torch.save(model.state_dict(),'{}_{}_{}_maxacc'.format(model.name,activation_function,config['Optimizer']))
             
             if i % printstep == 0:
                 print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
