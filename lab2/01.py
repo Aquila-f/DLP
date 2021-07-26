@@ -278,5 +278,5 @@ for modeltype in config['model']:
     plt.legend(df.columns.values)
     plt.savefig('{}.png'.format(model.name))
 
-print('Batch_size:{},optimizer:{},lr:{}'.format(config['Batch_size'],config['Optimizer'],config['lr']))
+print('Batch_size:{},optimizer:{},lr:{}'.format(config['Batch_size'],config['Optimizer'],config['Optim_hparas']))
 print(df_max)
