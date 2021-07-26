@@ -164,8 +164,8 @@ class DeepConvNet(nn.Module):
         return out
 
 config = {
-    'model' : [eegNet],
-    'Epochs' : 600,
+    'model' : [DeepConvNet],
+    'Epochs' : 150,
     'Batch_size' : int(input('Batch_size : ')),
     'Optimizer' : str(input('optimizer : ')),
     'Optim_hparas':{
@@ -232,9 +232,9 @@ for modeltype in config['model']:
                 pred = model(x)
                 train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
                 loss = config['Loss_function'](pred,label)
-                flood = (loss-0.32).abs()+0.32
-                flood.backward()
-                #loss.backward()
+                #flood = (loss-0.32).abs()+0.32
+                #flood.backward()
+                loss.backward()
                 train_loss += loss.item()
                 optimizer.step()
                 
