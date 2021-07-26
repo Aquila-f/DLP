@@ -151,7 +151,7 @@ class DeepConvNet(nn.Module):
             nn.Flatten()
         )
         self.classify = nn.Sequential(
-            nn.Linear(in_features=8600, out_features=2, bias=True)
+            nn.Linear(in_features=10200, out_features=2, bias=True)
         )
         
     def forward(self,x):
