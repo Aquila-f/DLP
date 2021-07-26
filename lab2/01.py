@@ -122,28 +122,28 @@ class DeepConvNet(nn.Module):
             nn.Conv2d(1, 25, kernel_size=(1,5)),
         )
         self.conv2 = nn.Sequential(
-            nn.Conv2d(25, 25, kernel_size=(2,1),padding=(0,25)),
+            nn.Conv2d(25, 25, kernel_size=(2,1)),
             nn.BatchNorm2d(25, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
             nn.MaxPool2d(kernel_size=(1,2)),
             nn.Dropout(0.5)
         )
         self.conv3 = nn.Sequential(
-            nn.Conv2d(25, 50, kernel_size=(1,5),padding=(0,12)),
+            nn.Conv2d(25, 50, kernel_size=(1,5)),
             nn.BatchNorm2d(50, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
             nn.MaxPool2d(kernel_size=(1,2)),
             nn.Dropout(0.5)
         )
         self.conv4 = nn.Sequential(
-            nn.Conv2d(50, 100, kernel_size=(1,5),padding=(0,5)),
+            nn.Conv2d(50, 100, kernel_size=(1,5)),
             nn.BatchNorm2d(100, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
             nn.MaxPool2d(kernel_size=(1,2)),
             nn.Dropout(0.5)
         )
         self.conv5 = nn.Sequential(
-            nn.Conv2d(100, 200, kernel_size=(1,5),),
+            nn.Conv2d(100, 200, kernel_size=(1,5)),
             nn.BatchNorm2d(200, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
             nn.MaxPool2d(kernel_size=(1,2)),
@@ -151,7 +151,7 @@ class DeepConvNet(nn.Module):
             nn.Flatten()
         )
         self.classify = nn.Sequential(
-            nn.Linear(in_features=10200, out_features=2, bias=True)
+            nn.Linear(in_features=8600, out_features=2, bias=True)
         )
         
     def forward(self,x):
