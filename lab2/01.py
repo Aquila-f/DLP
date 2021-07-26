@@ -185,7 +185,7 @@ df_max = pd.DataFrame(columns = {'ELU':0,'RelU':1,'LeakyReLU':2})
 for modeltype in config['model']:
     
     dfacc = pd.DataFrame()
-#     dfloss = pd.DataFrame()
+    dfloss = pd.DataFrame()
     test_acc_max_list = []
 #     train_acc_max_list = []
     
