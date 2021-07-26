@@ -140,14 +140,14 @@ class DeepConvNet(nn.Module):
             nn.BatchNorm2d(100, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
             nn.MaxPool2d(kernel_size=(1,2)),
-            nn.Dropout(0.75)
+            nn.Dropout(0.5)
         )
         self.conv5 = nn.Sequential(
             nn.Conv2d(100, 200, kernel_size=(1,5)),
             nn.BatchNorm2d(200, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
             nn.MaxPool2d(kernel_size=(1,2)),
-            nn.Dropout(0.75),
+            nn.Dropout(0.5),
             nn.Flatten()
         )
         self.classify = nn.Sequential(
