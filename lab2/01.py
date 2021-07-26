@@ -234,6 +234,8 @@ for modeltype in config['model']:
                 loss.backward()
                 train_loss += loss.item()
                 optimizer.step()
+                
+            train_loss = train_loss/(1080./config['Batch_size'])
             train_accuracy = train_accuracy*100./1080
             
             
@@ -245,6 +247,7 @@ for modeltype in config['model']:
                 loss2 = config['Loss_function'](testpred,testlabel)
                 test_loss += loss2.item()
             test_accuracy = test_accuracy*100./1080
+            test_loss = test_loss/(1080./config['Batch_size'])
 
             
             test_accuracy_list.append(test_accuracy)
