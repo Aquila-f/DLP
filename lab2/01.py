@@ -184,7 +184,8 @@ df_max = pd.DataFrame(columns = {'ELU':0,'RelU':1,'LeakyReLU':2})
 
 for modeltype in config['model']:
     
-    df = pd.DataFrame()
+    dfacc = pd.DataFrame()
+    dfloss = pd.DataFrame()
     test_acc_max_list = []
     train_acc_max_list = []
     
@@ -264,24 +265,34 @@ for modeltype in config['model']:
             if i % printstep == 0:
                 print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
                 print('test  - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
-
-        df['{}_{}_train'.format(model.name,activation_function)] = train_accuracy_list
-        df['{}_{}_test'.format(model.name,activation_function)] = test_accuracy_list
+        
+        dfloss['{}_{}_train'.format(model.name,activation_function)] = train_loss_list
+        dfloss['{}_{}_test'.format(model.name,activation_function)] = test_loss_list
+        
+        dfacc['{}_{}_train'.format(model.name,activation_function)] = train_accuracy_list
+        dfacc['{}_{}_test'.format(model.name,activation_function)] = test_accuracy_list
         test_acc_max_list.append(test_acc_max)
         print('{}_{},best_train_acc : {}'.format(model.name,activation_function,train_acc_max))
         print('{}_{},best_test_acc : {}'.format(model.name,activation_function,test_acc_max))
         
-
-        
-        
     df_max.loc['{}'.format(model.name)] = test_acc_max_list
+    
     plt.figure(figsize=(9,6))
-    plt.plot(df)
-    plt.title(model.name, fontsize=12)
+    plt.plot(dfloss)
+    plt.title('Loss Activation function comparision({})'.format(model.name), fontsize=12)
+    plt.xlabel("Epoch",fontsize = 12)
+    plt.ylabel("Loss",fontsize = 12)
+    plt.legend(dfloss.columns.values)
+    plt.savefig('{}_Loss.png'.format(model.name))
+    
+
+    plt.figure(figsize=(9,6))
+    plt.plot(dfacc)
+    plt.title('Accuracy Activation function comparision({})'.format(model.name), fontsize=12)
     plt.xlabel("Epoch",fontsize = 12)
     plt.ylabel("Accuracy(%)",fontsize = 12)
-    plt.legend(df.columns.values)
-    plt.savefig('{}.png'.format(model.name))
+    plt.legend(dfacc.columns.values)
+    plt.savefig('{}_Acc.png'.format(model.name))
 
 print('Batch_size:{},optimizer:{},lr:{}'.format(config['Batch_size'],config['Optimizer'],config['Optim_hparas']))
 print(df_max)
