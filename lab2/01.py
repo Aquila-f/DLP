@@ -231,8 +231,9 @@ for modeltype in config['model']:
                 pred = model(x)
                 train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
                 loss = config['Loss_function'](pred,label)
-                flood = (loss-0.4).abs()+0.4
-                flood.backward()
+#                 flood = (loss-0.4).abs()+0.4
+#                 flood.backward()
+                loss.backward()
                 train_loss += loss.item()
                 optimizer.step()
                 
