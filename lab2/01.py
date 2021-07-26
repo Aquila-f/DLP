@@ -277,5 +277,6 @@ for modeltype in config['model']:
     plt.ylabel("Accuracy(%)",fontsize = 12)
     plt.legend(df.columns.values)
     plt.savefig('{}.png'.format(model.name))
-    
+
+print('Batch_size:{},optimizer:{},lr:{}'.format(config['Batch_size'],config['Optimizer'],config['lr']))
 print(df_max)
