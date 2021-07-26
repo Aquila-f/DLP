@@ -164,7 +164,7 @@ class DeepConvNet(nn.Module):
 config = {
     'model' : [eegNet,DeepConvNet],
     'Epochs' : 300,
-    'Batch_size' : 64,
+    'Batch_size' : int(input('Batch_size : ')),
     'Optimizer' : str(input('optimizer : ')),
     'Optim_hparas':{
         'lr' : float(input('lr : '))
