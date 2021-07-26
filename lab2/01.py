@@ -126,28 +126,28 @@ class DeepConvNet(nn.Module):
             nn.BatchNorm2d(25, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
             nn.MaxPool2d(kernel_size=(1,2)),
-            nn.Dropout(0.5)
+            nn.Dropout(0.75)
         )
         self.conv3 = nn.Sequential(
             nn.Conv2d(25, 50, kernel_size=(1,5)),
             nn.BatchNorm2d(50, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
             nn.MaxPool2d(kernel_size=(1,2)),
-            nn.Dropout(0.5)
+            nn.Dropout(0.75)
         )
         self.conv4 = nn.Sequential(
             nn.Conv2d(50, 100, kernel_size=(1,5)),
             nn.BatchNorm2d(100, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
             nn.MaxPool2d(kernel_size=(1,2)),
-            nn.Dropout(0.5)
+            nn.Dropout(0.75)
         )
         self.conv5 = nn.Sequential(
             nn.Conv2d(100, 200, kernel_size=(1,5)),
             nn.BatchNorm2d(200, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
             nn.MaxPool2d(kernel_size=(1,2)),
-            nn.Dropout(0.5),
+            nn.Dropout(0.75),
             nn.Flatten()
         )
         self.classify = nn.Sequential(
@@ -164,8 +164,8 @@ class DeepConvNet(nn.Module):
         return out
 
 config = {
-    'model' : [eegNet,DeepConvNet],
-    'Epochs' : 300,
+    'model' : [eegNet],
+    'Epochs' : 600,
     'Batch_size' : int(input('Batch_size : ')),
     'Optimizer' : str(input('optimizer : ')),
     'Optim_hparas':{
