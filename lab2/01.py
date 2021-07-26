@@ -191,10 +191,10 @@ for modeltype in config['model']:
     
     for activation_function in config['activation_function']:
 
-#         train_accuracy_list = []
-#         train_loss_list = []
-#         test_accuracy_list = []
-#         test_loss_list = []
+        train_accuracy_list = []
+        train_loss_list = []
+        test_accuracy_list = []
+        test_loss_list = []
         
         test_acc_max = 0
         train_acc_max = 0
@@ -253,10 +253,10 @@ for modeltype in config['model']:
             test_loss = test_loss/(1080./config['Batch_size'])
 
             
-#             test_accuracy_list.append(test_accuracy)
-#             test_loss_list.append(test_loss)
-#             train_accuracy_list.append(train_accuracy)
-#             train_loss_list.append(train_loss)
+            test_accuracy_list.append(test_accuracy)
+            test_loss_list.append(test_loss)
+            train_accuracy_list.append(train_accuracy)
+            train_loss_list.append(train_loss)
             test_acc_max = test_accuracy if test_accuracy > test_acc_max else test_acc_max
             train_acc_max = train_accuracy if train_accuracy > train_acc_max else train_acc_max
             if test_accuracy > 87 and test_accuracy == test_acc_max:
@@ -265,39 +265,34 @@ for modeltype in config['model']:
             if i % printstep == 0:
                 print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
                 print('test  - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
-            torch.save(model.state_dict(),'{}_{}_{}_maxacc000'.format(model.name,activation_function,config['Optimizer']),_use_new_zipfile_serialization=False)
-            break
         
-#         dfloss['{}_{}_train'.format(model.name,activation_function)] = train_loss_list
-#         dfloss['{}_{}_test'.format(model.name,activation_function)] = test_loss_list
+        dfloss['{}_{}_train'.format(model.name,activation_function)] = train_loss_list
+        dfloss['{}_{}_test'.format(model.name,activation_function)] = test_loss_list
         
-#         dfacc['{}_{}_train'.format(model.name,activation_function)] = train_accuracy_list
-#         dfacc['{}_{}_test'.format(model.name,activation_function)] = test_accuracy_list
+        dfacc['{}_{}_train'.format(model.name,activation_function)] = train_accuracy_list
+        dfacc['{}_{}_test'.format(model.name,activation_function)] = test_accuracy_list
         test_acc_max_list.append(test_acc_max)
         print('{}_{},best_train_acc : {}'.format(model.name,activation_function,train_acc_max))
         print('{}_{},best_test_acc : {}'.format(model.name,activation_function,test_acc_max))
-        break
         
     df_max.loc['{}'.format(model.name)] = test_acc_max_list
-    break
-
     
-#     plt.figure(figsize=(9,6))
-#     plt.plot(dfloss)
-#     plt.title('Loss Activation function comparision({})'.format(model.name), fontsize=12)
-#     plt.xlabel("Epoch",fontsize = 12)
-#     plt.ylabel("Loss",fontsize = 12)
-#     plt.legend(dfloss.columns.values)
-#     plt.savefig('{}_Loss.png'.format(model.name))
+    plt.figure(figsize=(9,6))
+    plt.plot(dfloss)
+    plt.title('Loss Activation function comparision({})'.format(model.name), fontsize=12)
+    plt.xlabel("Epoch",fontsize = 12)
+    plt.ylabel("Loss",fontsize = 12)
+    plt.legend(dfloss.columns.values)
+    plt.savefig('{}_Loss.png'.format(model.name))
     
 
-#     plt.figure(figsize=(9,6))
-#     plt.plot(dfacc)
-#     plt.title('Accuracy Activation function comparision({})'.format(model.name), fontsize=12)
-#     plt.xlabel("Epoch",fontsize = 12)
-#     plt.ylabel("Accuracy(%)",fontsize = 12)
-#     plt.legend(dfacc.columns.values)
-#     plt.savefig('{}_Acc.png'.format(model.name))
+    plt.figure(figsize=(9,6))
+    plt.plot(dfacc)
+    plt.title('Accuracy Activation function comparision({})'.format(model.name), fontsize=12)
+    plt.xlabel("Epoch",fontsize = 12)
+    plt.ylabel("Accuracy(%)",fontsize = 12)
+    plt.legend(dfacc.columns.values)
+    plt.savefig('{}_Acc.png'.format(model.name))
 
 print('Batch_size:{},optimizer:{},lr:{}'.format(config['Batch_size'],config['Optimizer'],config['Optim_hparas']))
 print(df_max)
