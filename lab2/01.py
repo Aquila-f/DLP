@@ -165,7 +165,7 @@ class DeepConvNet(nn.Module):
 
 config = {
     'model' : [eegNet,DeepConvNet],
-    'Epochs' : 300,
+    'Epochs' : 150,
     'Batch_size' : int(input('Batch_size : ')),
     'Optimizer' : str(input('optimizer : ')),
     'Optim_hparas':{
@@ -216,7 +216,7 @@ for modeltype in config['model']:
         key = False
         
         print('{} , {}------------------------------'.format(model.name,activation_function))
-        model.cuda()
+#         model.cuda()
         optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
 
         for i in range(1,config['Epochs']+1):
