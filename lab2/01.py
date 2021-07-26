@@ -126,27 +126,27 @@ class DeepConvNet(nn.Module):
             nn.BatchNorm2d(25, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
             nn.MaxPool2d(kernel_size=(1,2)),
-            nn.Dropout(0.75)
+            nn.Dropout(0.5)
         )
         self.conv3 = nn.Sequential(
             nn.Conv2d(25, 50, kernel_size=(1,5)),
             nn.BatchNorm2d(50, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
-            nn.MaxPool2d(kernel_size=(1,2)),
-            nn.Dropout(0.75)
+            nn.MaxPool2d(kernel_size=(1,4)),
+            nn.Dropout(0.5)
         )
         self.conv4 = nn.Sequential(
             nn.Conv2d(50, 100, kernel_size=(1,5)),
             nn.BatchNorm2d(100, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
-            nn.MaxPool2d(kernel_size=(1,2)),
+            nn.MaxPool2d(kernel_size=(1,8)),
             nn.Dropout(0.5)
         )
         self.conv5 = nn.Sequential(
             nn.Conv2d(100, 200, kernel_size=(1,5)),
             nn.BatchNorm2d(200, eps=1e-5, momentum=0.1),
             activation_funcchoose(self.act_funct),
-            nn.MaxPool2d(kernel_size=(1,2)),
+            nn.MaxPool2d(kernel_size=(1,10)),
             nn.Dropout(0.5),
             nn.Flatten()
         )
@@ -165,7 +165,7 @@ class DeepConvNet(nn.Module):
 
 config = {
     'model' : [DeepConvNet],
-    'Epochs' : 450,
+    'Epochs' : 300,
     'Batch_size' : int(input('Batch_size : ')),
     'Optimizer' : str(input('optimizer : ')),
     'Optim_hparas':{
