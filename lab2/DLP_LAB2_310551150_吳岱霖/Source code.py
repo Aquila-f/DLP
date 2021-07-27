@@ -2,7 +2,6 @@ import numpy as np
 import torch.nn as nn
 import torch.utils.data as Data
 import torch.optim as optim
-# import random
 import pandas as pd
 from matplotlib import pyplot as plt
 import torch
@@ -61,20 +60,6 @@ def activation_funcchoose(act_func):
         return nn.LeakyReLU()
     return nn.ELU(alpha=1.0)
 
-# def calwithlabel(test_loadeer,model,lossfunc):
-#     model.eval()
-#     test_loss = 0
-#     test_accuracy = 0
-    
-#     for x, y in test_loadeer:
-#         x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
-#         pred = model(x)
-#         test_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
-#         test_loss += lossfunc(pred,label)
-        
-#     test_accuracy = test_accuracy*100./1080
-#     return test_loss, test_accuracy
-    
 
 class eegNet(nn.Module):
     def __init__(self,act_func):
@@ -178,7 +163,6 @@ config = {
 
 train_loader,test_loader = prep_dataloader(config['Batch_size'])
 epoch = config['Epochs']
-# optimizer = config['Optimizer'](model.parameters(), lr = config['Learning_rate'], )
 printstep = config['print_step']
 df_max = pd.DataFrame(columns = {'ELU':0,'RelU':1,'LeakyReLU':2})
 
@@ -201,19 +185,7 @@ for modeltype in config['model']:
 
         model = modeltype(activation_function)
         
-#         for param in model.parameters():
-#             print(param.data)
-#             break
-#         torch.save(model.state_dict(),'save')
-#         gg = modeltype(activation_function)
-#         for param in gg.parameters():
-#             print(param.data)
-#             break
-#         gg.load_state_dict(torch.load('save'))
-#         for param in gg.parameters():
-#             print(param.data)
-#             break
-        key = False
+
         
         print('{} , {}------------------------------'.format(model.name,activation_function))
         model.cuda()
