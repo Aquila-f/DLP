@@ -162,11 +162,7 @@ plt.legend(df_acc.columns.values)
 plt.title('Result Comparison()'.format(model.name), fontsize=12)
 plt.ylabel('Accuracy(%)')
 plt.xlabel('Epochs')
-plt.savefig('pretrain_{}_acc.png'.format(model.name))
-# if switch:
-#     plt.savefig('pretrain_{}_acc.png'.format(model.name))
-# else:
-#     plt.savefig('nonpretrain{}_acc.png'.format(model.name))
+plt.savefig('{}_acc.png'.format(model.name))
 
 
 
