@@ -108,7 +108,7 @@ for epoch in range(1,config['Epochs']+1):
     model.train()
     for x,y in train_loader:
         optimizer.zero_grad()
-#         x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
+        x, label = x.to(device), y.to(device)
         pred = model(x)
         print(torch.max(pred,1)[1])
         print(y)
