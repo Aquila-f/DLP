@@ -9,7 +9,7 @@ from torchvision import transforms,models
 
 print(torch.__version__)
 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+torch.cuda.empty_cache()
 def getData(mode):
     if mode == 'train':
         img = pd.read_csv('train_img.csv')
