@@ -135,7 +135,7 @@ for switch in [True, False]:
 
         model.eval()
         for xx,yy in test_loader:
-            xx, testlabel = xx.to(device), y.to(device)
+            xx, testlabel = xx.to(device), yy.to(device)
             testpred = model(xx)
             test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
             loss2 = config['Loss_function'](testpred, testlabel)
