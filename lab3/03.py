@@ -65,7 +65,7 @@ def prep_dataloader(root, batch_size):
 class ResNet18(nn.Module):
     def __init__(self,pretrained_type):
         super(ResNet18, self).__init__()
-        
+        self.name = 'ResNet18'
         self.pretrained_model = models.resnet18(pretrained = pretrained_type)
         self.classify = nn.Sequential(
             nn.Linear(in_features = 1000, out_features = 5, bias = True)
@@ -97,6 +97,12 @@ train_loader, test_loader = prep_dataloader('data/',config['Batch_size'])
 model = ResNet18(True)
 model.cuda() if torch.cuda.is_available() else model.cpu()
 optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
+df_acc = pd.DataFrame()
+
+train_accuracy_list = []
+train_loss_list = []
+test_accuracy_list = []
+test_loss_list = []
 
 for epoch in range(1,config['Epochs']+1):
     
@@ -104,33 +110,48 @@ for epoch in range(1,config['Epochs']+1):
     train_accuracy = 0
     test_loss = 0
     test_accuracy = 0
-    i = 0
     
     model.train()
     for x,y in train_loader:
         optimizer.zero_grad()
         x, label = x.to(device), y.to(device)
         pred = model(x)
-#         print(torch.max(pred,1)[1])
-#         print(y)
-#         print(torch.max(pred,1)[1].eq(label).sum().item())
-        
         train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
         loss = config['Loss_function'](pred, label)
         train_loss += loss.item()
-#         print(loss)
         loss.backward()
         optimizer.step()
-        i+=1
-        if i%100==0: print(i)
-    
-    train_loss = train_loss/(int(28099/config['Batch_size'])+1)
+    train_loss = train_loss/math.ceil(28099/config['Batch_size'])
     train_accuracy = train_accuracy*100./28099
+    train_loss_list.append(train_loss)
+    train_accuracy_list.append(train_accuracy)
+    
+    model.eval()
+    for xx,yy in test_loader:
+        xx, testlabel = xx.to(device), y.to(device)
+        testpred = model(xx)
+        test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
+        loss2 = config['Loss_function'](testpred, testlabel)
+        test_loss += loss2.item()
+    test_loss = test_loss/math.ceil(7025/config['Batch_size'])
+    test_accuracy = test_accuracy*100./7025
+    test_loss_list.append(test_loss)
+    test_accuracy_list.append(test_accuracy)
+    
     
     print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
-        
-    
-        
+
+df_acc['Test(with pretraining)'] = test_accuracy_list
+df_acc['Train(with pretraining)'] = train_accuracy_list
+
+plt.figure(figsize=(9,6))
+plt.plot(df_acc,'-o',markersize=3)
+plt.grid()
+plt.legend(df_acc.columns.values)
+plt.title('Result Comparison()'.format(model.name), fontsize=12)
+plt.ylabel('Accuracy(%)')
+plt.xlabel('Epochs')
+plt.savefig('{}_acc.png'.format(model.name))
 
 
 
