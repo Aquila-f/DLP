@@ -146,7 +146,7 @@ for switch in [True, False]:
         test_accuracy_list.append(test_accuracy)
 
 
-        print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
+        print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(epoch,train_loss,train_accuracy))
     if switch:
         df_acc['Test(with pretraining)'] = test_accuracy_list
         df_acc['Train(with pretraining)'] = train_accuracy_list
