@@ -112,7 +112,7 @@ for epoch in range(1,config['Epochs']+1):
         pred = model(x)
         print(torch.max(pred,1)[1])
         print(y)
-        print(torch.max(pred,1)[1].eq(y).sum().item())
+        print(torch.max(pred,1)[1].eq(label).sum().item())
         
         train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
         loss = config['Loss_function'](pred, label)
