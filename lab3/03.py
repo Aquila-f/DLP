@@ -155,18 +155,18 @@ for switch in [True, False]:
         df_acc['Test(w/o pretraining)'] = test_accuracy_list
         df_acc['Train(w/o pretraining)'] = train_accuracy_list
 
-    plt.figure(figsize=(9,6))
-    plt.plot(df_acc,'-o',markersize=3)
-    plt.grid()
-    plt.legend(df_acc.columns.values)
-    plt.title('Result Comparison()'.format(model.name), fontsize=12)
-    plt.ylabel('Accuracy(%)')
-    plt.xlabel('Epochs')
-
-    if switch:
-        plt.savefig('pretrain_{}_acc.png'.format(model.name))
-    else:
-        plt.savefig('nonpretrain_{}_acc.png'.format(model.name))
+plt.figure(figsize=(9,6))
+plt.plot(df_acc,'-o',markersize=3)
+plt.grid()
+plt.legend(df_acc.columns.values)
+plt.title('Result Comparison()'.format(model.name), fontsize=12)
+plt.ylabel('Accuracy(%)')
+plt.xlabel('Epochs')
+plt.savefig('pretrain_{}_acc.png'.format(model.name))
+# if switch:
+#     plt.savefig('pretrain_{}_acc.png'.format(model.name))
+# else:
+#     plt.savefig('nonpretrain{}_acc.png'.format(model.name))
 
 
 
