@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import math
 from PIL import Image
 import torch
 import torch.nn as nn
@@ -94,55 +95,64 @@ config = {
 train_loader, test_loader = prep_dataloader('data/',config['Batch_size'])
 
 
-model = ResNet18(True)
-model.cuda() if torch.cuda.is_available() else model.cpu()
-optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
+
 df_acc = pd.DataFrame()
+df_loss = pd.DataFrame()
 
-train_accuracy_list = []
-train_loss_list = []
-test_accuracy_list = []
-test_loss_list = []
+for switch in [True, False]:
+    
+    train_accuracy_list = []
+    train_loss_list = []
+    test_accuracy_list = []
+    test_loss_list = []
+    
+    model = ResNet18(switch)
+    model.cuda() if torch.cuda.is_available() else model.cpu()
+    optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
+    
+    for epoch in range(1,config['Epochs']+1):
 
-for epoch in range(1,config['Epochs']+1):
-    
-    train_loss = 0
-    train_accuracy = 0
-    test_loss = 0
-    test_accuracy = 0
-    
-    model.train()
-    for x,y in train_loader:
-        optimizer.zero_grad()
-        x, label = x.to(device), y.to(device)
-        pred = model(x)
-        train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
-        loss = config['Loss_function'](pred, label)
-        train_loss += loss.item()
-        loss.backward()
-        optimizer.step()
-    train_loss = train_loss/math.ceil(28099/config['Batch_size'])
-    train_accuracy = train_accuracy*100./28099
-    train_loss_list.append(train_loss)
-    train_accuracy_list.append(train_accuracy)
-    
-    model.eval()
-    for xx,yy in test_loader:
-        xx, testlabel = xx.to(device), y.to(device)
-        testpred = model(xx)
-        test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
-        loss2 = config['Loss_function'](testpred, testlabel)
-        test_loss += loss2.item()
-    test_loss = test_loss/math.ceil(7025/config['Batch_size'])
-    test_accuracy = test_accuracy*100./7025
-    test_loss_list.append(test_loss)
-    test_accuracy_list.append(test_accuracy)
-    
-    
-    print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
+        train_loss = 0
+        train_accuracy = 0
+        test_loss = 0
+        test_accuracy = 0
 
-df_acc['Test(with pretraining)'] = test_accuracy_list
-df_acc['Train(with pretraining)'] = train_accuracy_list
+        model.train()
+        for x,y in train_loader:
+            optimizer.zero_grad()
+            x, label = x.to(device), y.to(device)
+            pred = model(x)
+            train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
+            loss = config['Loss_function'](pred, label)
+            train_loss += loss.item()
+            loss.backward()
+            optimizer.step()
+
+        train_loss = train_loss/math.ceil(28099/config['Batch_size'])
+        train_accuracy = train_accuracy*100./28099
+        train_loss_list.append(train_loss)
+        train_accuracy_list.append(train_accuracy)
+
+        model.eval()
+        for xx,yy in test_loader:
+            xx, testlabel = xx.to(device), y.to(device)
+            testpred = model(xx)
+            test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
+            loss2 = config['Loss_function'](testpred, testlabel)
+            test_loss += loss2.item()
+        test_loss = test_loss/math.ceil(7025/config['Batch_size'])
+        test_accuracy = test_accuracy*100./7025
+        test_loss_list.append(test_loss)
+        test_accuracy_list.append(test_accuracy)
+
+
+        print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
+    if switch:
+        df_acc['Test(with pretraining)'] = test_accuracy_list
+        df_acc['Train(with pretraining)'] = train_accuracy_list
+    else:
+        df_acc['Test(w/o pretraining)'] = test_accuracy_list
+        df_acc['Train(w/o pretraining)'] = train_accuracy_list
 
 plt.figure(figsize=(9,6))
 plt.plot(df_acc,'-o',markersize=3)
