@@ -90,6 +90,7 @@ config = {
     'Loss_function' : torch.nn.CrossEntropyLoss()
 }
 
+
 train_loader, test_loader = prep_dataloader('data/',config['Batch_size'])
 
 
@@ -122,10 +123,11 @@ for epoch in range(1,config['Epochs']+1):
         optimizer.step()
         i+=1
         if i%100==0: print(i)
-
+    
+    train_loss = train_loss/(int(28099/config['Batch_size'])+1)
+    train_accuracy = train_accuracy*100./28099
+    
     print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
-    print(i)
-        
         
     
         
