@@ -110,18 +110,19 @@ for epoch in range(1,config['Epochs']+1):
         optimizer.zero_grad()
         x, label = x.to(device), y.to(device)
         pred = model(x)
-        print(torch.max(pred,1)[1])
-        print(y)
-        print(torch.max(pred,1)[1].eq(label).sum().item())
+#         print(torch.max(pred,1)[1])
+#         print(y)
+#         print(torch.max(pred,1)[1].eq(label).sum().item())
         
         train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
         loss = config['Loss_function'](pred, label)
         train_loss += loss.item()
-        print(loss)
+#         print(loss)
         loss.backward()
         optimizer.step()
         i+=1
         if i%100==0: print(i)
+
     print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
     print(i)
         
