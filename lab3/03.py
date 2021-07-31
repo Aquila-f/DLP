@@ -11,6 +11,7 @@ from matplotlib import pyplot as plt
 print(torch.__version__)
 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 torch.cuda.empty_cache()
+
 def getData(mode):
     if mode == 'train':
         img = pd.read_csv('train_img.csv')
@@ -119,9 +120,9 @@ df_loss = pd.DataFrame()
 for switch in [True, False]:
     
     train_accuracy_list = []
-    train_loss_list = []
+#     train_loss_list = []
     test_accuracy_list = []
-    test_loss_list = []
+#     test_loss_list = []
     
     model = ResNet50(switch)
     model.cuda() if torch.cuda.is_available() else model.cpu()
@@ -148,7 +149,7 @@ for switch in [True, False]:
 
         train_loss = train_loss/math.ceil(28099/config['Batch_size'])
         train_accuracy = train_accuracy*100./28099
-        train_loss_list.append(train_loss)
+#         train_loss_list.append(train_loss)
         train_accuracy_list.append(train_accuracy)
         print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(epoch,train_loss,train_accuracy))
 
@@ -161,7 +162,7 @@ for switch in [True, False]:
             test_loss += loss2.item()
         test_loss = test_loss/math.ceil(7025/config['Batch_size'])
         test_accuracy = test_accuracy*100./7025
-        test_loss_list.append(test_loss)
+#         test_loss_list.append(test_loss)
         test_accuracy_list.append(test_accuracy)
 
 
