@@ -130,9 +130,9 @@ for switch in [True, False]:
     
     for epoch in range(1,config['Epochs']+1):
 
-        train_loss = 0
+#         train_loss = 0
         train_accuracy = 0
-        test_loss = 0
+#         test_loss = 0
         test_accuracy = 0
 
         model.train()
@@ -143,7 +143,7 @@ for switch in [True, False]:
 #             print(pred)
             train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
             loss = config['Loss_function'](pred, label)
-            train_loss += loss.item()
+#             train_loss += loss.item()
             loss.backward()
             optimizer.step()
 
@@ -159,7 +159,7 @@ for switch in [True, False]:
             testpred = model(xx)
             test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
             loss2 = config['Loss_function'](testpred, testlabel)
-            test_loss += loss2.item()
+#             test_loss += loss2.item()
         test_loss = test_loss/math.ceil(7025/config['Batch_size'])
         test_accuracy = test_accuracy*100./7025
 #         test_loss_list.append(test_loss)
