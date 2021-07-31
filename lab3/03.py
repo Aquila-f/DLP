@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 import math
@@ -9,6 +8,20 @@ from torch.utils import data
 from torchvision import transforms,models
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+
+print(torch.__version__)
+device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+def getData(mode):
+    if mode == 'train':
+        img = pd.read_csv('train_img.csv')
+        label = pd.read_csv('train_label.csv')
+        return np.squeeze(img.values), np.squeeze(label.values)
+    else:
+        img = pd.read_csv('test_img.csv')
+        label = pd.read_csv('test_label.csv')
+        return np.squeeze(img.values), np.squeeze(label.values)
+
 class RetinopathyLoader(data.Dataset):
     def __init__(self, root, mode):
         self.root = root
@@ -31,18 +44,10 @@ class RetinopathyLoader(data.Dataset):
         ])
         
         s = preprocess(img)
-        s /= 255        
-        return s, self.label[index]
+        s /= 255
 
-def getData(mode):
-    if mode == 'train':
-        img = pd.read_csv('train_img.csv')
-        label = pd.read_csv('train_label.csv')
-        return np.squeeze(img.values), np.squeeze(label.values)
-    else:
-        img = pd.read_csv('test_img.csv')
-        label = pd.read_csv('test_label.csv')
-        return np.squeeze(img.values), np.squeeze(label.values)
+        
+        return s, self.label[index]
 
 def prep_dataloader(root, Batch_size):
     train_dataset = RetinopathyLoader(root, 'train')
@@ -62,12 +67,119 @@ def prep_dataloader(root, Batch_size):
     )
     return train_loader, test_loader
 
-train_loader, test_loader = prep_dataloader('data/',4)
+class ResNet18(nn.Module):
+    def __init__(self,pretrained_type):
+        super(ResNet18, self).__init__()
+        self.name = 'ResNet18'
+        self.pretrained_model = models.resnet18(pretrained = pretrained_type)
+        self.classify = nn.Sequential(
+            nn.Linear(in_features = 1000, out_features = 5, bias = True)
+        )
 
-i = 0
-for x,y in tqdm(train_loader):
-    i +=1
-    if i %100 ==0 :print(i)
+    def forward(self, x):
+        out = self.pretrained_model(x)
+        out = self.classify(out)
+        return out
     
-for x,y in tqdm(test_loader):
-    print(x.shape)
+class ResNet50(nn.Module):
+    def __init__(self,pretrained_type):
+        super(ResNet50, self).__init__()
+        self.name = 'ResNet50'
+        self.pretrained_model = models.resnet50(pretrained = pretrained_type)
+        self.classify = nn.Sequential(
+            nn.Linear(in_features = 1000, out_features = 5, bias = True)
+        )
+
+    def forward(self, x):
+        out = self.pretrained_model(x)
+        out = self.classify(out)
+        return out
+
+
+config = {
+    'Batch_size' : 4,
+    'Learning_rate' : 0.001,
+    'Epochs' : 5,
+    'Optimizer' : 'SGD',
+    'Optim_hparas':{
+        'lr' : 0.001,
+        'momentum' : 0.9,
+        'weight_decay' : 5e-4
+    },
+    'Loss_function' : torch.nn.CrossEntropyLoss()
+}
+
+
+train_loader, test_loader = prep_dataloader('data/',config['Batch_size'])
+
+
+
+df_acc = pd.DataFrame()
+df_loss = pd.DataFrame()
+
+for switch in [True, False]:
+    
+    train_accuracy_list = []
+    train_loss_list = []
+    test_accuracy_list = []
+    test_loss_list = []
+    
+    model = ResNet18(switch)
+    model.cuda() if torch.cuda.is_available() else model.cpu()
+    optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
+    
+    for epoch in range(1,config['Epochs']+1):
+        train_loss = 0
+        train_accuracy = 0
+        test_loss = 0
+        test_accuracy = 0
+        
+
+        model.train()
+        for x,y in tqdm(train_loader):
+            optimizer.zero_grad()
+            x, label = x.to(device), y.to(device)
+            pred = model(x)
+            train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
+            loss = config['Loss_function'](pred, label)
+            train_loss += loss.item()
+            loss.backward()
+            optimizer.step()
+        train_loss = train_loss/math.ceil(28099/config['Batch_size'])
+        train_accuracy = train_accuracy*100./28099
+        train_loss_list.append(train_loss)
+        train_accuracy_list.append(train_accuracy)
+        print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(epoch,train_loss,train_accuracy))
+
+        model.eval()
+        for xx,yy in tqdm(test_loader):
+            xx, testlabel = xx.to(device), yy.to(device)
+            testpred = model(xx)
+            test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
+            loss2 = config['Loss_function'](testpred, testlabel)
+            test_loss += loss2.item()
+        test_loss = test_loss/math.ceil(7025/config['Batch_size'])
+        test_accuracy = test_accuracy*100./7025
+        test_loss_list.append(test_loss)
+        test_accuracy_list.append(test_accuracy)
+
+
+        print('test - epoch : {}, loss : {}, accurancy : {:.2f}'.format(epoch,test_loss,test_accuracy))
+    if switch:
+        df_acc['Test(with pretraining)'] = test_accuracy_list
+        df_acc['Train(with pretraining)'] = train_accuracy_list
+    else:
+        df_acc['Test(w/o pretraining)'] = test_accuracy_list
+        df_acc['Train(w/o pretraining)'] = train_accuracy_list
+
+plt.figure(figsize=(9,6))
+plt.plot(df_acc,'-o',markersize=3)
+plt.grid()
+plt.legend(df_acc.columns.values)
+plt.title('Result Comparison({})'.format(model.name), fontsize=12)
+plt.ylabel('Accuracy(%)')
+plt.xlabel('Epochs')
+plt.savefig('{}_acc.png'.format(model.name))
+
+
+
