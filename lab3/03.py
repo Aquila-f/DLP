@@ -79,6 +79,20 @@ class ResNet18(nn.Module):
         out = self.pretrained_model(x)
         out = self.classify(out)
         return out
+    
+class ResNet50(nn.Module):
+    def __init__(self,pretrained_type):
+        super(ResNet50, self).__init__()
+        self.name = 'ResNet50'
+        self.pretrained_model = models.resnet50(pretrained = pretrained_type)
+        self.classify = nn.Sequential(
+            nn.Linear(in_features = 1000, out_features = 5, bias = True)
+        )
+
+    def forward(self, x):
+        out = self.pretrained_model(x)
+        out = self.classify(out)
+        return out
 
 
 config = {
@@ -109,7 +123,7 @@ for switch in [True, False]:
     test_accuracy_list = []
     test_loss_list = []
     
-    model = ResNet18(switch)
+    model = ResNet50(switch)
     model.cuda() if torch.cuda.is_available() else model.cpu()
     optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
     
@@ -125,6 +139,7 @@ for switch in [True, False]:
             optimizer.zero_grad()
             x, label = x.to(device), y.to(device)
             pred = model(x)
+            print(pred)
             train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
             loss = config['Loss_function'](pred, label)
             train_loss += loss.item()
@@ -162,7 +177,7 @@ plt.figure(figsize=(9,6))
 plt.plot(df_acc,'-o',markersize=3)
 plt.grid()
 plt.legend(df_acc.columns.values)
-plt.title('Result Comparison()'.format(model.name), fontsize=12)
+plt.title('Result Comparison({})'.format(model.name), fontsize=12)
 plt.ylabel('Accuracy(%)')
 plt.xlabel('Epochs')
 plt.savefig('{}_acc.png'.format(model.name))
