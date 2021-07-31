@@ -139,7 +139,7 @@ for switch in [True, False]:
             optimizer.zero_grad()
             x, label = x.to(device), y.to(device)
             pred = model(x)
-            print(pred)
+#             print(pred)
             train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
             loss = config['Loss_function'](pred, label)
             train_loss += loss.item()
