@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 
 print(torch.__version__)
 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-torch.cuda.empty_cache()
+
 def getData(mode):
     if mode == 'train':
         img = pd.read_csv('train_img.csv')
@@ -48,19 +48,19 @@ class RetinopathyLoader(data.Dataset):
         
         return s, self.label[index]
 
-def prep_dataloader(root, batch_size):
+def prep_dataloader(root, Batch_size):
     train_dataset = RetinopathyLoader(root, 'train')
     train_loader = data.DataLoader(
         train_dataset,
-        batch_size = batch_size,
+        batch_size = Batch_size,
         shuffle = True,
         num_workers = 4
     )
     
     test_dataset = RetinopathyLoader(root, 'test')
     test_loader = data.DataLoader(
-        train_dataset,
-        batch_size = batch_size,
+        test_dataset,
+        batch_size = Batch_size,
         shuffle = False,
         num_workers = 4
     )
@@ -141,11 +141,7 @@ for switch in [True, False]:
         for xx,yy in test_loader:
             xx, testlabel = xx.to(device), yy.to(device)
             testpred = model(xx)
-            print(torch.max(testpred,1)[1])
-            print(testlabel)
-            print(torch.max(testpred,1)[1].eq(testlabel).sum().item())
             test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
-#             print(test_accuracy)
             loss2 = config['Loss_function'](testpred, testlabel)
             test_loss += loss2.item()
         test_loss = test_loss/math.ceil(7025/config['Batch_size'])
