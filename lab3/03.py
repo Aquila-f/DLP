@@ -64,9 +64,10 @@ def prep_dataloader(root, Batch_size):
 
 train_loader, test_loader = prep_dataloader('data/',4)
 
-
-for x,y in train_loader:
-    print('d')
+i = 0
+for x,y in tqdm(train_loader):
+    i +=1
+    if i %100 ==0 :print(i)
     
 for x,y in tqdm(test_loader):
     print(x.shape)
