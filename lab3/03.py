@@ -117,12 +117,15 @@ train_loader, test_loader = prep_dataloader('data/',config['Batch_size'])
 df_acc = pd.DataFrame()
 df_loss = pd.DataFrame()
 
-for switch in [True, False]:
+for switch in [True]:
     
     train_accuracy_list = []
     train_loss_list = []
     test_accuracy_list = []
     test_loss_list = []
+    test_max_acc = 0
+    
+    
     
     model = ResNet18(switch)
     model.cuda() if torch.cuda.is_available() else model.cpu()
@@ -162,6 +165,11 @@ for switch in [True, False]:
         test_accuracy = test_accuracy*100./7025
         test_loss_list.append(test_loss)
         test_accuracy_list.append(test_accuracy)
+        
+        if test_accuracy > test_max_acc: test_max_acc = test_accuracy
+        if test_accuracy > 80 and test_accuracy == test_acc_max:
+            torch.save(model.state_dict(),'{}_maxacc'.format(model.name)
+            print(test_accuracy)
 
 
         print('test - epoch : {}, loss : {}, accurancy : {:.2f}'.format(epoch,test_loss,test_accuracy))
@@ -172,6 +180,7 @@ for switch in [True, False]:
         df_acc['Test(w/o pretraining)'] = test_accuracy_list
         df_acc['Train(w/o pretraining)'] = train_accuracy_list
 
+df_acc.index += 1
 plt.figure(figsize=(9,6))
 plt.plot(df_acc,'-o',markersize=3)
 plt.grid()
