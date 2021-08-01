@@ -168,7 +168,7 @@ for switch in [True]:
         
         if test_accuracy > test_max_acc: test_max_acc = test_accuracy
         if test_accuracy > 80 and test_accuracy == test_acc_max:
-            torch.save(model.state_dict(),'{}_maxacc'.format(model.name)
+            torch.save(model.state_dict(),'{}_maxacc'.format(model.name))
             print(test_accuracy)
 
 
