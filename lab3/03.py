@@ -99,7 +99,7 @@ class ResNet50(nn.Module):
 config = {
     'Batch_size' : 4,
     'Learning_rate' : 0.001,
-    'Epochs' : 10,
+    'Epochs' : 5,
     'Optimizer' : 'SGD',
     'Optim_hparas':{
         'lr' : 0.001,
@@ -137,7 +137,7 @@ for switch in [True]:
         test_loss = 0
         test_accuracy = 0
         
-
+        break
         model.train()
         for x,y in tqdm(train_loader):
             optimizer.zero_grad()
@@ -167,7 +167,7 @@ for switch in [True]:
         test_accuracy_list.append(test_accuracy)
         
         if test_accuracy > test_max_acc: test_max_acc = test_accuracy
-        if test_accuracy > 80 and test_accuracy == test_acc_max:
+        if test_accuracy > 80 and test_accuracy == test_max_acc:
             torch.save(model.state_dict(),'{}_maxacc'.format(model.name))
             print(test_accuracy)
 
