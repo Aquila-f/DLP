@@ -137,7 +137,7 @@ for switch in [True]:
         test_loss = 0
         test_accuracy = 0
         
-        break
+        
         model.train()
         for x,y in tqdm(train_loader):
             optimizer.zero_grad()
