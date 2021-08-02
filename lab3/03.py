@@ -147,7 +147,7 @@ for switch in [True]:
     model = ResNet18(switch)
     model.cuda() if torch.cuda.is_available() else model.cpu()
     optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
-    break
+
     
     for epoch in range(1,config['Epochs']+1):
         train_loss = 0
