@@ -55,7 +55,7 @@ def prep_dataloader(root, Batch_size):
         train_dataset,
         batch_size = Batch_size,
         shuffle = True,
-        num_workers = 8
+        num_workers = 4
     )
     
     test_dataset = RetinopathyLoader(root, 'test')
@@ -63,7 +63,7 @@ def prep_dataloader(root, Batch_size):
         test_dataset,
         batch_size = Batch_size,
         shuffle = False,
-        num_workers = 8
+        num_workers = 4
     )
     return train_loader, test_loader
 
