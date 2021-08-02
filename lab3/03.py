@@ -40,11 +40,11 @@ class RetinopathyLoader(data.Dataset):
         preprocess = transforms.Compose([
         #     transforms.Resize(512),
             transforms.ToTensor(),
-        #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
         
         s = preprocess(img)
-        s /= 255
+#         s /= 255
 
         
         return s, self.label[index]
@@ -99,7 +99,7 @@ class ResNet50(nn.Module):
 config = {
     'Batch_size' : 4,
     'Learning_rate' : 0.001,
-    'Epochs' : 5,
+    'Epochs' : 10,
     'Optimizer' : 'SGD',
     'Optim_hparas':{
         'lr' : 0.001,
@@ -161,6 +161,8 @@ for switch in [True]:
             test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
             loss2 = config['Loss_function'](testpred, testlabel)
             test_loss += loss2.item()
+            
+            
         test_loss = test_loss/math.ceil(7025/config['Batch_size'])
         test_accuracy = test_accuracy*100./7025
         test_loss_list.append(test_loss)
