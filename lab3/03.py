@@ -8,6 +8,8 @@ from torch.utils import data
 from torchvision import transforms,models
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+from sklearn.metrics import confusion_matrix
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 print(torch.__version__)
 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -36,9 +38,9 @@ class RetinopathyLoader(data.Dataset):
 
         path = '{}{}.jpeg'.format(self.root, self.img_name[index])
         img = Image.open(path)
-        
         preprocess = transforms.Compose([
-            transforms.Resize(128),
+            transforms.Resize(512),
+            transforms.RandomRotation(180),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
@@ -46,8 +48,22 @@ class RetinopathyLoader(data.Dataset):
         s = preprocess(img)
 #         s /= 255
 
-        
         return s, self.label[index]
+
+def plot_confusion_matrix(y_true,y_pred,res):
+    plt.figure(figsize=(8, 8))
+    cm = confusion_matrix(y_true, y_pred,normalize='true')
+    ax = plt.subplot()
+    plt.xlabel('Predicted label',fontsize = 15)
+    plt.ylabel('True label',fontsize = 15)
+    im = ax.imshow(cm,cmap = plt.cm.Blues)
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.3)
+    for i in range(5):
+        for j in range(5):
+            ax.text(i, j, cm[j][i],color='black' if cm[j][i]<0.5 else 'white',ha='center', va='center',fontsize=14)
+    plt.colorbar(im, cax=cax)
+    plt.savefig('{}_confusion_matrix.png'.format(res))
 
 def prep_dataloader(root, Batch_size):
     train_dataset = RetinopathyLoader(root, 'train')
@@ -98,7 +114,7 @@ class ResNet50(nn.Module):
 
 config = {
     'Batch_size' : 4,
-    'Epochs' : 30,
+    'Epochs' : 10,
     'Optimizer' : 'SGD',
     'Optim_hparas':{
         'lr' : 0.001,
@@ -112,9 +128,11 @@ config = {
 train_loader, test_loader = prep_dataloader('data/',config['Batch_size'])
 
 
+cmatrix_label = np.squeeze(pd.read_csv('test_label.csv').values).tolist()
 
 df_acc = pd.DataFrame()
 df_loss = pd.DataFrame()
+
 
 for switch in [True]:
     
@@ -129,12 +147,15 @@ for switch in [True]:
     model = ResNet18(switch)
     model.cuda() if torch.cuda.is_available() else model.cpu()
     optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
+    break
     
     for epoch in range(1,config['Epochs']+1):
         train_loss = 0
         train_accuracy = 0
         test_loss = 0
         test_accuracy = 0
+        cmatrix_pred = []
+
         
         
         model.train()
@@ -157,7 +178,11 @@ for switch in [True]:
         for xx,yy in tqdm(test_loader):
             xx, testlabel = xx.to(device), yy.to(device)
             testpred = model(xx)
-            test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
+            sss = torch.max(testpred,1)[1]
+            for ccma in sss.tolist():
+                cmatrix_pred.append(ccma)
+                
+            test_accuracy += sss.eq(testlabel).sum().item()
             loss2 = config['Loss_function'](testpred, testlabel)
             test_loss += loss2.item()
             
@@ -171,8 +196,8 @@ for switch in [True]:
         if test_accuracy > 80 and test_accuracy == test_max_acc:
             torch.save(model.state_dict(),'{}_maxacc'.format(model.name))
             print(test_accuracy)
-
-
+            plot_confusion_matrix(cmatrix_label,cmatrix_pred,model.name)
+            
         print('test - epoch : {}, loss : {}, accurancy : {:.2f}'.format(epoch,test_loss,test_accuracy))
     if switch:
         df_acc['Test(with pretraining)'] = test_accuracy_list
@@ -190,6 +215,10 @@ plt.title('Result Comparison({})'.format(model.name), fontsize=12)
 plt.ylabel('Accuracy(%)')
 plt.xlabel('Epochs')
 plt.savefig('{}_acc.png'.format(model.name))
+df_acc.to_csv('{}.csv'.format(model.name))
+    
+
+
 
 
 
