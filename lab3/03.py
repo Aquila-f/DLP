@@ -101,7 +101,7 @@ config = {
     'Epochs' : 30,
     'Optimizer' : 'SGD',
     'Optim_hparas':{
-        'lr' : 0.01,
+        'lr' : 0.001,
         'momentum' : 0.9,
         'weight_decay' : 5e-4
     },
