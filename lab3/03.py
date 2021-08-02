@@ -62,7 +62,7 @@ def plot_confusion_matrix(y_true,y_pred,res):
     cax = divider.append_axes("right", size="5%", pad=0.3)
     for i in range(5):
         for j in range(5):
-            ax.text(i, j, cm[j][i],color='black' if cm[j][i]<0.5 else 'white',ha='center', va='center',fontsize=14)
+            ax.text(i, j, math.floor(cm[1][0]*100)/100,color='black' if cm[j][i]<0.5 else 'white',ha='center', va='center',fontsize=14)
     plt.colorbar(im, cax=cax)
     plt.savefig('{}_confusion_matrix.png'.format(res))
 
