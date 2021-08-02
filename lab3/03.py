@@ -40,7 +40,8 @@ class RetinopathyLoader(data.Dataset):
         img = Image.open(path)
         preprocess = transforms.Compose([
             transforms.Resize(512),
-            transforms.RandomRotation(180),
+            transforms.RandomVerticalFlip()
+            transforms.RandomRotation(360),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
@@ -114,7 +115,7 @@ class ResNet50(nn.Module):
 
 config = {
     'Batch_size' : 4,
-    'Epochs' : 10,
+    'Epochs' : 20,
     'Optimizer' : 'SGD',
     'Optim_hparas':{
         'lr' : 0.001,
