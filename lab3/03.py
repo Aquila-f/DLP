@@ -98,9 +98,9 @@ class ResNet50(nn.Module):
 
 config = {
     'Batch_size' : 4,
-    'Learning_rate' : 0.001,
+    'Learning_rate' : 0.8,
     'Epochs' : 30,
-    'Optimizer' : 'SGD',
+    'Optimizer' : 'Adadelta',
     'Optim_hparas':{
         'lr' : 0.001,
         'momentum' : 0.9,
