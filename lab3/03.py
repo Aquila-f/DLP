@@ -99,11 +99,11 @@ class ResNet50(nn.Module):
 config = {
     'Batch_size' : 4,
     'Epochs' : 30,
-    'Optimizer' : 'Adadelta',
+    'Optimizer' : 'SGD',
     'Optim_hparas':{
-        'lr' : 0.8,
-#        'momentum' : 0.9,
-#        'weight_decay' : 5e-4
+        'lr' : 0.01,
+        'momentum' : 0.9,
+        'weight_decay' : 5e-4
     },
     'Loss_function' : torch.nn.CrossEntropyLoss()
 }
