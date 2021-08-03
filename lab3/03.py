@@ -35,20 +35,26 @@ class RetinopathyLoader(data.Dataset):
         return len(self.img_name)
 
     def __getitem__(self, index):
-
         path = '{}{}.jpeg'.format(self.root, self.img_name[index])
         img = Image.open(path)
-        preprocess = transforms.Compose([
+        train_preprocess = transforms.Compose([
             transforms.Resize(512),
             transforms.RandomRotation(360),
             transforms.RandomVerticalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
+        test_preprocess = transforms.Compose([
+            transforms.Resize(512),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
         
-        s = preprocess(img)
-#         s /= 255
-
+        if self.mode == 'train': 
+            s = train_preprocess(img)
+        else:
+            s = test_preprocess(img)
+            
         return s, self.label[index]
 
 def plot_confusion_matrix(y_true,y_pred,res):
