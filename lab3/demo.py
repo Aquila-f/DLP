@@ -85,7 +85,7 @@ class ResNet18(nn.Module):
 
 config = {
     'Batch_size' : 4,
-    'Epochs' : 5,
+    'Epochs' : ,
     'Optimizer' : 'SGD',
     'Optim_hparas':{
         'lr' : 0.001,
@@ -113,5 +113,6 @@ for xx,yy in tqdm(test_loader):
     test_accuracy += sss.eq(testlabel).sum().item()
     loss2 = config['Loss_function'](testpred, testlabel)
     test_loss += loss2.item()
+test_accuracy = test_accuracy*100./7025
 print('accuracy = {}'.format(test_accuracy))
     
