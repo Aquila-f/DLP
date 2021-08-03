@@ -99,10 +99,13 @@ train_loader, test_loader = prep_dataloader('data/',config['Batch_size'])
 
 model = ResNet18(True)
 model.load_state_dict(torch.load('save/ResNet18_maxacc{}'.format('82'),map_location=torch.device('cpu')))
+model.cuda() if torch.cuda.is_available() else model.cpu()
+
 
 model.eval()
 test_accuracy = 0
 test_loss = 0
+print(+----------------------------------------------+)
 for xx,yy in tqdm(test_loader):
     xx, testlabel = xx.to(device), yy.to(device)
     testpred = model(xx)
