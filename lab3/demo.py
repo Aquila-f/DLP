@@ -98,7 +98,8 @@ config = {
 train_loader, test_loader = prep_dataloader('data/',config['Batch_size'])
 
 model = ResNet18(True)
-model.load_state_dict(torch.load('save/ResNet18_maxacc{}'.format('82'),map_location=torch.device('cpu')))
+model.load_state_dict(torch.load('save/ResNet18_maxacc{}'.format('82'))
+print('model load success')
 model.cuda() if torch.cuda.is_available() else model.cpu()
 
 
@@ -114,5 +115,6 @@ for xx,yy in tqdm(test_loader):
     loss2 = config['Loss_function'](testpred, testlabel)
     test_loss += loss2.item()
 test_accuracy = test_accuracy*100./7025
-print('accuracy = {}'.format(test_accuracy))
+test_loss = test_loss/math.ceil(7025/config['Batch_size'])
+print('ResNet18 : accuracy = {:.4f}%, loss = {:.4f}'.format(test_accuracy, test_loss))
     
