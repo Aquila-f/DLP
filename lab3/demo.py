@@ -82,6 +82,18 @@ class ResNet18(nn.Module):
         out = self.pretrained_model(x)
         out = self.classify(out)
         return out
+
+config = {
+    'Batch_size' : 4,
+    'Epochs' : 5,
+    'Optimizer' : 'SGD',
+    'Optim_hparas':{
+        'lr' : 0.001,
+        'momentum' : 0.9,
+        'weight_decay' : 5e-4
+    },
+    'Loss_function' : torch.nn.CrossEntropyLoss()
+}
     
 train_loader, test_loader = prep_dataloader('data/',config['Batch_size'])
 
