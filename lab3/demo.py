@@ -40,8 +40,8 @@ class RetinopathyLoader(data.Dataset):
         img = Image.open(path)
         preprocess = transforms.Compose([
             transforms.Resize(512),
-            transforms.RandomRotation(360),
-            transforms.RandomVerticalFlip(),
+#             transforms.RandomRotation(360),
+#             transforms.RandomVerticalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
@@ -99,7 +99,7 @@ train_loader, test_loader = prep_dataloader('data/',config['Batch_size'])
 
 model = ResNet18(True)
 model.load_state_dict(torch.load('save/ResNet18_maxacc{}'.format('82')))
-print('model load success')
+print('model load success......')
 model.cuda() if torch.cuda.is_available() else model.cpu()
 
 
