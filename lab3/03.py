@@ -115,7 +115,7 @@ class ResNet50(nn.Module):
 
 config = {
     'Batch_size' : 4,
-    'Epochs' : 10,
+    'Epochs' : 5,
     'Optimizer' : 'SGD',
     'Optim_hparas':{
         'lr' : 0.001,
@@ -142,10 +142,10 @@ for switch in [True,False]:
     test_accuracy_list = []
     test_loss_list = []
     test_max_acc = 0
+
     
     
-    
-    model = ResNet18(switch)
+    model = ResNet50(switch)
     model.cuda() if torch.cuda.is_available() else model.cpu()
     optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
 
@@ -158,7 +158,7 @@ for switch in [True,False]:
         cmatrix_pred = []
 
         
-        
+        print('+---------------Epoch : {}---------------+'.format(epoch))
         model.train()
         for x,y in tqdm(train_loader):
             optimizer.zero_grad()
@@ -173,7 +173,6 @@ for switch in [True,False]:
         train_accuracy = train_accuracy*100./28099
         train_loss_list.append(train_loss)
         train_accuracy_list.append(train_accuracy)
-        print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(epoch,train_loss,train_accuracy))
 
         model.eval()
         for xx,yy in tqdm(test_loader):
@@ -198,8 +197,9 @@ for switch in [True,False]:
             torch.save(model.state_dict(),'{}_maxacc'.format(model.name))
             print(test_accuracy)
             plot_confusion_matrix(cmatrix_label,cmatrix_pred,model.name)
-            
-        print('test - epoch : {}, loss : {}, accurancy : {:.2f}'.format(epoch,test_loss,test_accuracy))
+        print('train - loss : {:.4f}, accurancy : {:.4f}'.format(train_loss,train_accuracy))
+        print('test  - loss : {:.4f}, accurancy : {:.4f}'.format(test_loss,test_accuracy))
+        print('+-----------------------------------------+')
     if switch:
         df_acc['Test(with pretraining)'] = test_accuracy_list
         df_acc['Train(with pretraining)'] = train_accuracy_list
