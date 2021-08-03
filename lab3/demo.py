@@ -105,7 +105,7 @@ model.cuda() if torch.cuda.is_available() else model.cpu()
 model.eval()
 test_accuracy = 0
 test_loss = 0
-print(+----------------------------------------------+)
+print('+---------------------Demo---------------------+')
 for xx,yy in tqdm(test_loader):
     xx, testlabel = xx.to(device), yy.to(device)
     testpred = model(xx)
