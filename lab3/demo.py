@@ -98,7 +98,7 @@ config = {
 train_loader, test_loader = prep_dataloader('data/',config['Batch_size'])
 
 model = ResNet18(True)
-model.load_state_dict(torch.load('save/ResNet18_maxacc{}'.format('82'))
+model.load_state_dict(torch.load('save/ResNet18_maxacc{}'.format('82')))
 print('model load success')
 model.cuda() if torch.cuda.is_available() else model.cpu()
 
