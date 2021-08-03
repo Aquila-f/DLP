@@ -115,10 +115,10 @@ class ResNet50(nn.Module):
 
 config = {
     'Batch_size' : 4,
-    'Epochs' : 50,
+    'Epochs' : 10,
     'Optimizer' : 'SGD',
     'Optim_hparas':{
-        'lr' : 0.0008,
+        'lr' : 0.001,
         'momentum' : 0.9,
         'weight_decay' : 5e-4
     },
@@ -135,7 +135,7 @@ df_acc = pd.DataFrame()
 df_loss = pd.DataFrame()
 
 
-for switch in [True]:
+for switch in [True,False]:
     
     train_accuracy_list = []
     train_loss_list = []
