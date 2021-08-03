@@ -85,7 +85,7 @@ class ResNet18(nn.Module):
 
 config = {
     'Batch_size' : 4,
-    'Epochs' : ,
+    'Epochs' : 10,
     'Optimizer' : 'SGD',
     'Optim_hparas':{
         'lr' : 0.001,
