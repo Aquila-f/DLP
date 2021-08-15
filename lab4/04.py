@@ -270,7 +270,7 @@ def train(model, train_loader, teacher_force_ratio, kl_weight, device):
         optimizer.zero_grad()
         word, tense = word.to(device), tense.to(device)
         predict_idx, pred_one_hot, mean_h, logvar_h, mean_c, logvar_c = model(word, tense, init_hidden, init_cell, teacher_force_ratio)
-        CEloss, KLloss = got_ce_kl_loss(mean_h, logvar_h, mean_c, logvar_c, torch.tensor(pred_one_hot), word.view(-1))
+        CEloss, KLloss = got_ce_kl_loss(mean_h, logvar_h, mean_c, logvar_c, torch.tensor(pred_one_hot).to(device), word.view(-1))
         total_CEloss += CEloss.item()
         total_KLloss += KLloss.item()
         loss = CEloss + kl_weight * KLloss
