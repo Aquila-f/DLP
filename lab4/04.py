@@ -101,6 +101,7 @@ def prep_dataloader(path):
         train_dataset,
         batch_size = 1,
         shuffle = True,
+        num_workers = 4
     )
     
     test_dataset = Datasetloader(path, 'test')
@@ -108,6 +109,7 @@ def prep_dataloader(path):
         test_dataset,
         batch_size = 1,
         shuffle = False,
+        num_workers = 4
     )
     return train_loader, test_loader, train_dataset.max_len
 
