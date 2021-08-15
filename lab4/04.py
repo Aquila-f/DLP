@@ -277,8 +277,9 @@ def train(model, train_loader, teacher_force_ratio, kl_weight, device):
         loss.backward()
         optimizer.step()
         
-#         pred, label = idx2word(predict_idx), predict_idx(word)
-#         total_bluescore += compute_bleu(pred, label)
+        
+        pred, label = idx2word(predict_idx), predict_idx(word)
+        total_bluescore += compute_bleu(pred, label)
         
     return total_CEloss/len(train_loader), total_KLloss/len(train_loader), total_bluescore/len(train_loader)
 
@@ -311,7 +312,7 @@ kl_weight_list = []
 
 
 ernn = VAE(input_size, hidden_size, condition_size, latent_size)
-ernn.to(device)
+ernn.cuda()
 optimizer = optim.SGD(ernn.parameters(), lr = learn_rate)
 
 for epoch in range(total_epochs):
