@@ -1,270 +1,231 @@
-import numpy as np
-import torch.nn as nn
-import torch.utils.data as Data
-import torch.optim as optim
 import pandas as pd
-from matplotlib import pyplot as plt
+import numpy as np
+import math
+from PIL import Image
 import torch
-# from torchsummary import summary
+import torch.nn as nn
+from torch.utils import data
+from torchvision import transforms,models
+from matplotlib import pyplot as plt
+from tqdm import tqdm
+from sklearn.metrics import confusion_matrix
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 print(torch.__version__)
 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(device)
-# torch.cuda.empty_cache()
 
-def read_bci_data(): 
-    
-    S4b_train = np.load('S4b_train.npz')
-    X11b_train = np.load('X11b_train.npz')
-    S4b_test = np.load('S4b_test.npz')
-    X11b_test = np.load('X11b_test.npz')
+def getData(mode):
+    if mode == 'train':
+        img = pd.read_csv('train_img.csv')
+        label = pd.read_csv('train_label.csv')
+        return np.squeeze(img.values), np.squeeze(label.values)
+    else:
+        img = pd.read_csv('test_img.csv')
+        label = pd.read_csv('test_label.csv')
+        return np.squeeze(img.values), np.squeeze(label.values)
 
-    train_data = np.concatenate((S4b_train['signal'], X11b_train['signal']), axis=0)
-    train_label = np.concatenate((S4b_train['label'], X11b_train['label']), axis=0)
-    test_data = np.concatenate((S4b_test['signal'], X11b_test['signal']), axis=0)
-    test_label = np.concatenate((S4b_test['label'], X11b_test['label']), axis=0)
+class RetinopathyLoader(data.Dataset):
+    def __init__(self, root, mode):
+        self.root = root
+        self.img_name, self.label = getData(mode)
+        self.mode = mode
+        print("> Found %d images..." % (len(self.img_name)))
 
-    train_label = train_label - 1
-    test_label = test_label -1
-    train_data = np.transpose(np.expand_dims(train_data, axis=1), (0, 1, 3, 2))
-    test_data = np.transpose(np.expand_dims(test_data, axis=1), (0, 1, 3, 2))
+    def __len__(self):
+        return len(self.img_name)
 
-    mask = np.where(np.isnan(train_data))
-    train_data[mask] = np.nanmean(train_data)
+    def __getitem__(self, index):
+        path = '{}{}.jpeg'.format(self.root, self.img_name[index])
+        img = Image.open(path)
+        train_preprocess = transforms.Compose([
+            transforms.Resize(512),
+            transforms.RandomRotation(360),
+            transforms.RandomVerticalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+        test_preprocess = transforms.Compose([
+            transforms.Resize(512),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+        
+        if self.mode == 'train': 
+            s = train_preprocess(img)
+        else:
+            s = test_preprocess(img)
+            
+        return s, self.label[index]
 
-    mask = np.where(np.isnan(test_data))
-    test_data[mask] = np.nanmean(test_data)
+def plot_confusion_matrix(y_true,y_pred,res):
+    plt.figure(figsize=(8, 8))
+    cm = confusion_matrix(y_true, y_pred,normalize='true')
+    ax = plt.subplot()
+    plt.xlabel('Predicted label',fontsize = 15)
+    plt.ylabel('True label',fontsize = 15)
+    im = ax.imshow(cm,cmap = plt.cm.Blues)
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.3)
+    for i in range(5):
+        for j in range(5):
+            ax.text(i, j, math.floor(cm[j][i]*100)/100,color='black' if cm[j][i]<0.5 else 'white',ha='center', va='center',fontsize=14)
+    plt.colorbar(im, cax=cax)
+    plt.savefig('{}_confusion_matrix.png'.format(res))
 
-    print(train_data.shape, train_label.shape, test_data.shape, test_label.shape)
-    return train_data, train_label, test_data, test_label
-
-def prep_dataloader(batch_size):
-    train_data, train_label, test_data, test_label = read_bci_data()
-    train_dataset = Data.TensorDataset(torch.from_numpy(train_data),torch.from_numpy(train_label))
-    train_loader = Data.DataLoader(
+def prep_dataloader(root, Batch_size):
+    train_dataset = RetinopathyLoader(root, 'train')
+    train_loader = data.DataLoader(
         train_dataset,
-        batch_size = config['Batch_size'],
+        batch_size = Batch_size,
         shuffle = True,
+        num_workers = 4
     )
-
-    test_dataset = Data.TensorDataset(torch.from_numpy(test_data),torch.from_numpy(test_label))
-    test_loader = Data.DataLoader(
+    
+    test_dataset = RetinopathyLoader(root, 'test')
+    test_loader = data.DataLoader(
         test_dataset,
-        batch_size = config['Batch_size'],
+        batch_size = Batch_size,
+        shuffle = False,
+        num_workers = 4
     )
-    return train_loader,test_loader
+    return train_loader, test_loader
 
-def activation_funcchoose(act_func):
-    if act_func == 'ReLU':
-        return nn.ReLU()
-    elif act_func == 'LeakyReLU':
-        return nn.LeakyReLU()
-    return nn.ELU(alpha=1.0)
-
-
-class eegNet(nn.Module):
-    def __init__(self,act_func):
-        self.name = 'EEGNet'
-        self.act_funct = act_func
-        super(eegNet,self).__init__()
-        self.firstconv = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=(1,51), stride=(1,1), padding=(0,25), bias=False),
-            nn.BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        )
-        self.depthwiseConv = nn.Sequential(
-            nn.Conv2d(16, 32, kernel_size=(2,1), stride=(1,1), groups=16, bias=False),
-            nn.BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
-            activation_funcchoose(self.act_funct),
-            nn.AvgPool2d(kernel_size = (1,4), stride=(1,4), padding=0),
-#             nn.Dropout(0.25),
-            nn.Dropout(0.5),
-        )
-        self.separableConv = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=(1,15), stride=(1,1), padding=(0,7), bias=False),
-            nn.BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True),
-            activation_funcchoose(self.act_funct),
-            nn.AvgPool2d(kernel_size = (1,8), stride=(1,8), padding=0),
-#             nn.Dropout(0.25),
-            nn.Dropout(0.5),
-            nn.Flatten()
-        )
+class ResNet18(nn.Module):
+    def __init__(self,pretrained_type):
+        super(ResNet18, self).__init__()
+        self.name = 'ResNet18'
+        self.pretrained_model = models.resnet18(pretrained = pretrained_type)
         self.classify = nn.Sequential(
-            nn.Linear(in_features=736, out_features=2, bias=True)
+            nn.Linear(in_features = 1000, out_features = 5, bias = True)
         )
-        
-    def forward(self,x):
-        out = self.firstconv(x)
-        out = self.depthwiseConv(out)
-        out = self.separableConv(out)
+
+    def forward(self, x):
+        out = self.pretrained_model(x)
+        out = self.classify(out)
+        return out
+    
+class ResNet50(nn.Module):
+    def __init__(self,pretrained_type):
+        super(ResNet50, self).__init__()
+        self.name = 'ResNet50'
+        self.pretrained_model = models.resnet50(pretrained = pretrained_type)
+        self.classify = nn.Sequential(
+            nn.Linear(in_features = 1000, out_features = 5, bias = True)
+        )
+
+    def forward(self, x):
+        out = self.pretrained_model(x)
         out = self.classify(out)
         return out
 
-class DeepConvNet(nn.Module):
-    def __init__(self,act_func):
-        self.name = 'DeepConvNet'
-        self.act_funct = act_func
-        super(DeepConvNet,self).__init__()
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(1, 25, kernel_size=(1,5)),
-        )
-        self.conv2 = nn.Sequential(
-            nn.Conv2d(25, 25, kernel_size=(2,1)),
-            nn.BatchNorm2d(25, eps=1e-5, momentum=0.1),
-            activation_funcchoose(self.act_funct),
-            nn.MaxPool2d(kernel_size=(1,2)),
-            nn.Dropout(0.5)
-        )
-        self.conv3 = nn.Sequential(
-            nn.Conv2d(25, 50, kernel_size=(1,5)),
-            nn.BatchNorm2d(50, eps=1e-5, momentum=0.1),
-            activation_funcchoose(self.act_funct),
-            nn.MaxPool2d(kernel_size=(1,2)),
-            nn.Dropout(0.5)
-        )
-        self.conv4 = nn.Sequential(
-            nn.Conv2d(50, 100, kernel_size=(1,5)),
-            nn.BatchNorm2d(100, eps=1e-5, momentum=0.1),
-            activation_funcchoose(self.act_funct),
-            nn.MaxPool2d(kernel_size=(1,2)),
-            nn.Dropout(0.5)
-        )
-        self.conv5 = nn.Sequential(
-            nn.Conv2d(100, 200, kernel_size=(1,5)),
-            nn.BatchNorm2d(200, eps=1e-5, momentum=0.1),
-            activation_funcchoose(self.act_funct),
-            nn.MaxPool2d(kernel_size=(1,2)),
-            nn.Dropout(0.5),
-            nn.Flatten()
-        )
-        self.classify = nn.Sequential(
-            nn.Linear(in_features=8600, out_features=2, bias=True)
-        )
-        
-    def forward(self,x):
-        out = self.conv1(x)
-        out = self.conv2(out)
-        out = self.conv3(out)
-        out = self.conv4(out)
-        out = self.conv5(out)
-        out = self.classify(out)
-        return out
 
 config = {
-    'model' : [eegNet,DeepConvNet],
-    'Epochs' : 300,
-    'Batch_size' : int(input('Batch_size : ')),
-    'Optimizer' : str(input('optimizer : ')),
+    'Batch_size' : 4,
+    'Epochs' : 10,
+    'Optimizer' : 'SGD',
     'Optim_hparas':{
-        'lr' : float(input('lr : '))
+        'lr' : 0.001,
+        'momentum' : 0.9,
+        'weight_decay' : 5e-4
     },
-    'Loss_function' : torch.nn.CrossEntropyLoss(),
-    'print_step': 30,
-    'activation_function' : ['ELU','ReLU','LeakyReLU']
+    'Loss_function' : torch.nn.CrossEntropyLoss()
 }
 
-train_loader,test_loader = prep_dataloader(config['Batch_size'])
-epoch = config['Epochs']
-printstep = config['print_step']
-df_max = pd.DataFrame(columns = {'ELU':0,'RelU':1,'LeakyReLU':2})
 
-for modeltype in config['model']:
+train_loader, test_loader = prep_dataloader('data/',config['Batch_size'])
+
+
+cmatrix_label = np.squeeze(pd.read_csv('test_label.csv').values).tolist()
+
+df_acc = pd.DataFrame()
+df_loss = pd.DataFrame()
+
+
+for switch in [True,False]:
     
-    dfacc = pd.DataFrame()
-    dfloss = pd.DataFrame()
-    test_acc_max_list = []
-    train_acc_max_list = []
+    train_accuracy_list = []
+    train_loss_list = []
+    test_accuracy_list = []
+    test_loss_list = []
+    test_max_acc = 0
+
     
-    for activation_function in config['activation_function']:
+    
+    model = ResNet18(switch)
+    model.cuda() if torch.cuda.is_available() else model.cpu()
+    optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
 
-        train_accuracy_list = []
-        train_loss_list = []
-        test_accuracy_list = []
-        test_loss_list = []
+    
+    for epoch in range(1,config['Epochs']+1):
+        train_loss = 0
+        train_accuracy = 0
+        test_loss = 0
+        test_accuracy = 0
+        cmatrix_pred = []
+
         
-        test_acc_max = 0
-        train_acc_max = 0
+        print('+---------------Epoch : {}---------------+'.format(epoch))
+        model.train()
+        for x,y in tqdm(train_loader):
+            optimizer.zero_grad()
+            x, label = x.to(device), y.to(device)
+            pred = model(x)
+            train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
+            loss = config['Loss_function'](pred, label)
+            train_loss += loss.item()
+            loss.backward()
+            optimizer.step()
+        train_loss = train_loss/math.ceil(28099/config['Batch_size'])
+        train_accuracy = train_accuracy*100./28099
+        train_loss_list.append(train_loss)
+        train_accuracy_list.append(train_accuracy)
 
-        model = modeltype(activation_function)
-        
-
-        
-        print('{} , {}------------------------------'.format(model.name,activation_function))
-        model.cuda()
-        optimizer = getattr(torch.optim, config['Optimizer'])(model.parameters(), **config['Optim_hparas'])
-
-        for i in range(1,config['Epochs']+1):
-            train_loss = 0
-            train_accuracy = 0
-            test_loss = 0
-            test_accuracy = 0
-            
-            model.train()
-            for x, y in train_loader:
-                optimizer.zero_grad()
-                x, label = x.to(device ,dtype = torch.float), y.to(device ,dtype = torch.long)
-                pred = model(x)
-                train_accuracy += torch.max(pred,1)[1].eq(label).sum().item()
-                loss = config['Loss_function'](pred,label)
-                #flood = (loss-0.32).abs()+0.32
-                #flood.backward()
-                loss.backward()
-                train_loss += loss.item()
-                optimizer.step()
+        model.eval()
+        for xx,yy in tqdm(test_loader):
+            xx, testlabel = xx.to(device), yy.to(device)
+            testpred = model(xx)
+            sss = torch.max(testpred,1)[1]
+            for ccma in sss.tolist():
+                cmatrix_pred.append(ccma)
                 
-            train_loss = train_loss/(1080./config['Batch_size'])
-            train_accuracy = train_accuracy*100./1080
+            test_accuracy += sss.eq(testlabel).sum().item()
+            loss2 = config['Loss_function'](testpred, testlabel)
+            test_loss += loss2.item()
             
             
-            model.eval()
-            for xx, yy in test_loader:
-                xx, testlabel = xx.to(device ,dtype = torch.float), yy.to(device ,dtype = torch.long)
-                testpred = model(xx)
-                test_accuracy += torch.max(testpred,1)[1].eq(testlabel).sum().item()
-                loss2 = config['Loss_function'](testpred,testlabel)
-                test_loss += loss2.item()
-            test_accuracy = test_accuracy*100./1080
-            test_loss = test_loss/(1080./config['Batch_size'])
+        test_loss = test_loss/math.ceil(7025/config['Batch_size'])
+        test_accuracy = test_accuracy*100./7025
+        test_loss_list.append(test_loss)
+        test_accuracy_list.append(test_accuracy)
+        
+        if test_accuracy > test_max_acc: test_max_acc = test_accuracy
+        if test_accuracy > 80 and test_accuracy == test_max_acc:
+            torch.save(model.state_dict(),'{}_maxacc'.format(model.name))
+            print(test_accuracy)
+            plot_confusion_matrix(cmatrix_label,cmatrix_pred,model.name)
+        print('train - loss : {:.4f}, accurancy : {:.4f}'.format(train_loss,train_accuracy))
+        print('test  - loss : {:.4f}, accurancy : {:.4f}'.format(test_loss,test_accuracy))
+        print('+-----------------------------------------+')
+    if switch:
+        df_acc['Test(with pretraining)'] = test_accuracy_list
+        df_acc['Train(with pretraining)'] = train_accuracy_list
+    else:
+        df_acc['Test(w/o pretraining)'] = test_accuracy_list
+        df_acc['Train(w/o pretraining)'] = train_accuracy_list
 
-            
-            test_accuracy_list.append(test_accuracy)
-            test_loss_list.append(test_loss)
-            train_accuracy_list.append(train_accuracy)
-            train_loss_list.append(train_loss)
-            test_acc_max = test_accuracy if test_accuracy > test_acc_max else test_acc_max
-            train_acc_max = train_accuracy if train_accuracy > train_acc_max else train_acc_max
-            if test_accuracy > 87 and test_accuracy == test_acc_max:
-                torch.save(model.state_dict(),'{}_{}_{}_maxacc'.format(model.name,activation_function,config['Optimizer']))
-            
-            if i % printstep == 0:
-                print('train - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,train_loss,train_accuracy))
-                print('test  - epoch : {}, loss : {}, accurancy : {:.2f}'.format(i,test_loss,test_accuracy))
-        
-        dfloss['{}_{}_train'.format(model.name,activation_function)] = train_loss_list
-        dfloss['{}_{}_test'.format(model.name,activation_function)] = test_loss_list
-        
-        dfacc['{}_{}_train'.format(model.name,activation_function)] = train_accuracy_list
-        dfacc['{}_{}_test'.format(model.name,activation_function)] = test_accuracy_list
-        test_acc_max_list.append(test_acc_max)
-        print('{}_{},best_train_acc : {}'.format(model.name,activation_function,train_acc_max))
-        print('{}_{},best_test_acc : {}'.format(model.name,activation_function,test_acc_max))
-        
-    df_max.loc['{}'.format(model.name)] = test_acc_max_list
-    
-    plt.figure(figsize=(9,6))
-    plt.plot(dfloss)
-    plt.title('Loss Activation function comparision({})'.format(model.name), fontsize=12)
-    plt.xlabel("Epoch",fontsize = 12)
-    plt.ylabel("Loss",fontsize = 12)
-    plt.legend(dfloss.columns.values)
-    plt.savefig('{}_Loss.png'.format(model.name))
+df_acc.index += 1
+plt.figure(figsize=(9,6))
+plt.plot(df_acc,'-o',markersize=3)
+plt.grid()
+plt.legend(df_acc.columns.values)
+plt.title('Result Comparison({})'.format(model.name), fontsize=12)
+plt.ylabel('Accuracy(%)')
+plt.xlabel('Epochs')
+plt.savefig('{}_acc.png'.format(model.name))
+df_acc.to_csv('{}.csv'.format(model.name))
     
 
-    plt.figure(figsize=(9,6))
-    plt.plot(dfacc)
-    plt.title('Accuracy Activation function comparision({})'.format(model.name), fontsize=12)
-    plt.xlabel("Epoch",fontsize = 12)
-    plt.ylabel("Accuracy(%)",fontsize = 12)
-    plt.legend(dfacc.columns.values)
-    plt.savefig('{}_Acc.png'.format(model.name))
 
-print('Batch_size:{},optimizer:{},lr:{}'.format(config['Batch_size'],config['Optimizer'],config['Optim_hparas']))
-print(df_max)
+
+
+
