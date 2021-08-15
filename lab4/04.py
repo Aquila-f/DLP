@@ -259,7 +259,7 @@ class VAE(nn.Module):
         def initHidden(self):
             return torch.zeros(1, 1, self.hidden_size, device=device)
 
-def train(model, train_loader, teacher_force_ratio, kl_weight):
+def train(model, train_loader, teacher_force_ratio, kl_weight, device):
     init_hidden = model.EncoderRNN.initHidden(model)
     init_cell = model.EncoderRNN.initCell(model)
     total_CEloss, total_KLloss, total_bluescore = 0, 0, 0
@@ -275,8 +275,13 @@ def train(model, train_loader, teacher_force_ratio, kl_weight):
         loss.backward()
         optimizer.step()
         
+#         pred, label = idx2word(predict_idx), predict_idx(word)
+#         total_bluescore += compute_bleu(pred, label)
         
     return total_CEloss/len(train_loader), total_KLloss/len(train_loader), total_bluescore/len(train_loader)
+
+# def test():
+    
 
 ################################################
 
@@ -312,7 +317,7 @@ for epoch in range(total_epochs):
     ernn.train()
     teacher_force = teacher_force_ratio(epoch, total_epochs)
     kl_weight = 1
-    CEloss, KLloss, blue_score= train(ernn, train_loader, teacher_force, kl_weight)    
+    CEloss, KLloss, blue_score= train(ernn, train_loader, teacher_force, kl_weight, device)    
     CEloss_list.append(CEloss)
     KLloss_list.append(KLloss)
     bluescore_list.append(blue_score)
