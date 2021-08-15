@@ -63,7 +63,7 @@ def tense2idx(tense):
 def idx2word(idx):
     word = ""
     for i in idx:
-        if i == 1: break
+        if i.item() == 1: break
         char = idx2char_dict[i.item()]
         word += char
     return word
@@ -270,20 +270,23 @@ def train(model, train_loader, teacher_force_ratio, kl_weight, device):
         optimizer.zero_grad()
         word, tense = word.to(device), tense.to(device)
         predict_idx, pred_one_hot, mean_h, logvar_h, mean_c, logvar_c = model(word, tense, init_hidden, init_cell, teacher_force_ratio)
-        CEloss, KLloss = got_ce_kl_loss(mean_h, logvar_h, mean_c, logvar_c, torch.tensor(pred_one_hot).to(device), word.view(-1))
+        CEloss, KLloss = got_ce_kl_loss(mean_h, logvar_h, mean_c, logvar_c, torch.tensor(pred_one_hot), word.view(-1))
         total_CEloss += CEloss.item()
         total_KLloss += KLloss.item()
         loss = CEloss + kl_weight * KLloss
         loss.backward()
         optimizer.step()
-        
-        
-        pred, label = idx2word(predict_idx), predict_idx(word)
+
+        pred = idx2word(torch.tensor(predict_idx))
+        label = idx2word(word[0])
+
         total_bluescore += compute_bleu(pred, label)
+
         
     return total_CEloss/len(train_loader), total_KLloss/len(train_loader), total_bluescore/len(train_loader)
 
 # def test():
+    
     
 
 ################################################
