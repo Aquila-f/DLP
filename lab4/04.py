@@ -322,7 +322,7 @@ for epoch in range(total_epochs):
     
     ernn.train()
     teacher_force = teacher_force_ratio(epoch, total_epochs)
-    kl_weight = 1
+    kl_weight = 0.1
     CEloss, KLloss, blue_score= train(ernn, train_loader, teacher_force, kl_weight, device)    
     CEloss_list.append(CEloss)
     KLloss_list.append(KLloss)
