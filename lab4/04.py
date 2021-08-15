@@ -205,7 +205,7 @@ class VAE(nn.Module):
         
         
         for id_d in range(len(word[0])):
-            output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_h_init,decoder_c_init)
+            output, decoder_h_init, decoder_c_init = self.decoder(decoder_input, decoder_h_init,decoder_c_init)
             pred_distribution.append(output[0].tolist())
             predict_idx_elem = output.topk(1)[1]
             predict_idx.append(predict_idx_elem)
