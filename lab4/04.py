@@ -183,6 +183,8 @@ class VAE(nn.Module):
         for word_vac in word[0]:
             encoder_output, hidden_new, cell_new = self.encoder(word_vac, hidden_new, cell_new)
         
+        encoder_hidden = hidden_new
+        encoder_cell = cell_new
         
         mean_h = self.hidden2mean(encoder_hidden)
         logvar_h = self.hidden2logvar(encoder_hidden)
