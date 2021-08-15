@@ -272,6 +272,7 @@ def train(model, train_loader, teacher_force_ratio, kl_weight, device):
         total_CEloss += CEloss.item()
         total_KLloss += KLloss.item()
         loss = CEloss + kl_weight * KLloss
+        loss.to(device)
         loss.backward()
         optimizer.step()
         
