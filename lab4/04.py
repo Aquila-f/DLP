@@ -20,6 +20,7 @@ from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
 import torch.utils.data as data
 print(torch.__version__)
 device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(device)
 
 def txt2list(mode):
     status = True if mode == 'train' else False
@@ -303,6 +304,7 @@ kl_weight_list = []
 
 
 ernn = VAE(input_size, hidden_size, condition_size, latent_size)
+ernn.to(device)
 optimizer = optim.SGD(ernn.parameters(), lr = learn_rate)
 
 for epoch in range(total_epochs):
