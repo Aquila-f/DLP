@@ -292,7 +292,7 @@ input_size = 28
 hidden_size = 256
 condition_size = 8
 latent_size = 32
-total_epochs = 1
+total_epochs = 50
 print_step = 50
 
 train_loader, test_loader, train_max_len = prep_dataloader('')
