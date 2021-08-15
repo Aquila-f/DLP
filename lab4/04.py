@@ -110,6 +110,37 @@ def prep_dataloader(path):
     )
     return train_loader, test_loader, train_dataset.max_len
 
+def teacher_force_ratio(epoch, total_epoch):
+    return 1-epoch/total_epoch
+
+def kl_weight(epoch, total_epoch, kl_type, time):
+    
+    if kl_annealing_type == 'monotonic':
+        return (1./(time-1))*(epoch-1) if epoch<time else 1.
+
+    else: #cycle
+        period = epochs//time
+        epoch %= period
+        KL_weight = sigmoid((epoch - period // 2) / (period // 10)) / 2
+        return KL_weight
+    
+def got_ce_kl_loss(mean_h, logvar_h, mean_c, logvar_c, pred_output, target):
+    loss_fun = nn.CrossEntropyLoss()
+    CEloss = loss_fun(pred_output[:len(target)], target[:len(target)])
+    
+    KLloss_h = -0.5 * torch.sum(1 + logvar_h - mean_h**2 - logvar_h.exp())
+    KLloss_c = -0.5 * torch.sum(1 + logvar_c - mean_c**2 - logvar_c.exp())
+    
+    return CEloss, KLloss_h + KLloss_c
+
+def compute_bleu(output, reference):
+    cc = SmoothingFunction()
+    if len(reference) == 3:
+        weights = (0.33,0.33,0.33)
+    else:
+        weights = (0.25,0.25,0.25,0.25)
+    return sentence_bleu([reference], output,weights=weights,smoothing_function=cc.method1)
+
 class VAE(nn.Module):
     def __init__(self, input_size, hidden_size, condition_size, latent_size):
         super(VAE, self).__init__()
