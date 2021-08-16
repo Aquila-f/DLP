@@ -413,7 +413,6 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
         CEloss_t += CEloss.item()
         KLloss_t += KLloss.item()
         print_loss_total += loss
-        print(CEloss_t)
         
         if iter % plot_every == 0:
             model.eval() 
