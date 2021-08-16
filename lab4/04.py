@@ -252,6 +252,7 @@ class VAE(nn.Module):
                     if decoder_input.item() == EOS_token:
                         break
                 word.append(idx2word(pred_idx))
+#                 print(idx2word(pred_idx))
             wordssss.append(word)
             
         return wordssss
@@ -365,7 +366,7 @@ def timeSince(since, percent):
     
 
 
-def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=500):
+def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=2000):
     start = time.time()
     plot_celosses = []
     plot_kllosses = []
@@ -405,27 +406,38 @@ def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=500):
             bleu_score, mean_h, logvar_h, mean_c, logvar_c = test(model, test_list)
             wordsss = model.gaussian_gen(mean_h, logvar_h, mean_c, logvar_c, MAX_LENGTH)
             gaussian_score = Gaussian_score(wordsss)
-            if gaussian_score > 0.8: print(wordsss)
+#             if gaussian_score > 0.8: print(wordsss)
             
-            if bleu_score > best_bleu:
-                best_bleu = bleu_score
-                troch.save(model.state_dict(),'bleumodel')
-                print('new_best_bleu : {}'.format(bleu_score))
+#             if bleu_score > best_bleu:
+#                 best_bleu = bleu_score
+#                 troch.save(model.state_dict(),'bleumodel')
+#                 print('new_best_bleu : {}'.format(bleu_score))
                 
             plot_celosses.append(CEloss_t/plot_every)
             plot_kllosses.append(KLloss_t/plot_every)
             plot_bleu.append(bleu_score)
             plot_gau.append(gaussian_score)
-            print('bleu_score : {}, gaussian_score_score : {}'.format(bleu_score, gaussian_score))
+#             print('bleu_score : {}, gaussian_score_score : {}'.format(bleu_score, gaussian_score))
             
             
             
         if iter % print_every == 0:
+                
+            print(wordsss)
             
-            print_loss_avg = print_loss_total / print_every
-            print_loss_total = 0
-            print('%s (%d %d%%) %.4f' % (timeSince(start, iter / n_iters),
-                                         iter, iter / n_iters * 100, print_loss_avg))
+            if bleu_score > best_bleu:
+                best_bleu = bleu_score
+                troch.save(model.state_dict(),'bleumodel')
+                print('new_best_bleu : {}'.format(bleu_score))
+            
+            print('bleu_score : {}, gaussian_score_score : {}'.format(bleu_score, gaussian_score))
+            print('+-------------------------------------------------------------------------+')
+            
+            
+#             print_loss_avg = print_loss_total / print_every
+#             print_loss_total = 0
+#             print('%s (%d %d%%) %.4f' % (timeSince(start, iter / n_iters),
+#                                          iter, iter / n_iters * 100, print_loss_avg))
 
 
     
