@@ -134,8 +134,8 @@ class VAE(nn.Module):
         
         
         self.embedding_init_c = nn.Embedding(4, condition_size)
-        self.embedding_la_h = nn.Embedding(4, condition_size)
-        self.embedding_la_c = nn.Embedding(4, condition_size)
+        self.embedding_la = nn.Embedding(4, condition_size)
+#         self.embedding_la_c = nn.Embedding(4, condition_size)
 #         self.init_h2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
 #         self.init_c2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
         
@@ -169,14 +169,14 @@ class VAE(nn.Module):
         mean_h = self.hidden2mean(encoder_hidden)
         logvar_h = self.hidden2logvar(encoder_hidden)
         latent_h = self.Reparameterization_Trick(mean_h, logvar_h)
-        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_la_h(target_tensor[1]).view(1, 1, -1)), dim = -1))
+        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_la(target_tensor[1]).view(1, 1, -1)), dim = -1))
         KLloss_h = -0.5 * torch.sum(1 + logvar_h - mean_h**2 - logvar_h.exp())
 
 
         mean_c = self.cell2mean(encoder_cell)
         logvar_c = self.cell2logvar(encoder_cell)
         latent_c = self.Reparameterization_Trick(mean_c, logvar_c)
-        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_la_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
+        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_la(target_tensor[1]).view(1, 1, -1)), dim = -1))
         KLloss_c = -0.5 * torch.sum(1 + logvar_c - mean_c**2 - logvar_c.exp())
 
         
@@ -223,13 +223,13 @@ class VAE(nn.Module):
         mean_h = self.hidden2mean(encoder_hidden)
         logvar_h = self.hidden2logvar(encoder_hidden)
         latent_h = self.Reparameterization_Trick(mean_h, logvar_h)
-        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_la_h(target_tensor[1]).view(1, 1, -1)), dim = -1))
+        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_la(target_tensor[1]).view(1, 1, -1)), dim = -1))
         
         
         mean_c = self.cell2mean(encoder_cell)
         logvar_c = self.cell2logvar(encoder_cell)
         latent_c = self.Reparameterization_Trick(mean_c, logvar_c)
-        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_la_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
+        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_la(target_tensor[1]).view(1, 1, -1)), dim = -1))
         
         decoder_input = torch.tensor([[SOS_token]], device=device)
         pred_idx = torch.tensor([]).to(device)
@@ -254,8 +254,8 @@ class VAE(nn.Module):
             latent_c = torch.randn_like(torch.zeros(1, 1, 32)).to(device)
             
             for tensor in tense:
-                decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_la_h(tensor).view(1, 1, -1)), dim = -1))
-                decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_la_c(tensor).view(1, 1, -1)), dim = -1))
+                decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_la(tensor).view(1, 1, -1)), dim = -1))
+                decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_la(tensor).view(1, 1, -1)), dim = -1))
                 decoder_input = torch.tensor([[SOS_token]], device=device)
                 pred_idx = torch.tensor([]).to(device)
                 
@@ -410,10 +410,10 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
                                          t_f_r, KLD_weight)
         
         
-        CEloss_t += CEloss
-        KLloss_t += KLloss
+        CEloss_t += CEloss.item()
+        KLloss_t += KLloss.item()
         print_loss_total += loss
-
+        print(CEloss_t)
         
         if iter % plot_every == 0:
             model.eval() 
@@ -450,11 +450,11 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             print('bleu_score : {}, gaussian_score_score : {}'.format(bleu_score, gaussian_score))
             print('+-------------------------------------------------------------------------+')
         
-        if iter == 50000:
-            print(plot_celosses)
-            print(plot_kllosses)
-            print(plot_bleu)
-            print(plot_gau)
+#         if iter == 50000:
+#             print(plot_celosses)
+#             print(plot_kllosses)
+#             print(plot_bleu)
+#             print(plot_gau)
             
         
 
