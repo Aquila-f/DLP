@@ -76,13 +76,6 @@ def Reparameterization_Trick(self, mean, logvar):
 def teacher_force_ratio(epoch, total_epoch):
     return 1-epoch/total_epoch
 
-
-
-
-    
-
-
-
 MAX_LENGTH = 15
 class VAE(nn.Module):
     def __init__(self, input_size, hidden_size, condition_size, latent_size):
@@ -93,7 +86,7 @@ class VAE(nn.Module):
         self.latent_size = latent_size
         
         
-        self.embedding_init_c = nn.Embedding(4, condition_size).to(device)
+        self.embedding_init_c = nn.Embedding(4, condition_size)
 #         self.init_h2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
 #         self.init_c2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
         
@@ -127,14 +120,14 @@ class VAE(nn.Module):
         mean_h = self.hidden2mean(encoder_hidden)
         logvar_h = self.hidden2logvar(encoder_hidden)
         latent_h = self.Reparameterization_Trick(mean_h, logvar_h)
-        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(target_tensor[1].to(device)).view(1, 1, -1)), dim = -1))
+        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
         KLloss_h = -0.5 * torch.sum(1 + logvar_h - mean_h**2 - logvar_h.exp())
 
 
         mean_c = self.cell2mean(encoder_cell)
         logvar_c = self.cell2logvar(encoder_cell)
         latent_c = self.Reparameterization_Trick(mean_c, logvar_c)
-        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(target_tensor[1].to(device)).view(1, 1, -1)), dim = -1))
+        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
         KLloss_c = -0.5 * torch.sum(1 + logvar_c - mean_c**2 - logvar_c.exp())
 
         KLloss = KLloss_h + KLloss_c
@@ -151,7 +144,7 @@ class VAE(nn.Module):
         # Teacher forcing: Feed the target as the next input
             for de_idx in range(target_length):
                 decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
-                CEloss += criterion(decoder_output, target_tensor[0][de_idx].to(device))
+                CEloss += criterion(decoder_output, target_tensor[0][de_idx])
                 decoder_input = target_tensor[0][de_idx]  # Teacher forcing
 
         else:
@@ -162,7 +155,7 @@ class VAE(nn.Module):
                 decoder_input = topi.squeeze().detach()  # detach from history as input
 #                 print(decoder_input)
                 
-                CEloss += criterion(decoder_output, target_tensor[0][de_idx].to(device))
+                CEloss += criterion(decoder_output, target_tensor[0][de_idx])
                 if decoder_input.item() == EOS_token:
                     break
         
@@ -229,8 +222,8 @@ class VAE(nn.Module):
 def train(model, input_tensor, target_tensor, optimizer, criterion, teacher_force_ratio, kl_w, max_length=MAX_LENGTH):
     
     
-    encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1].to(device)).view(1, 1, -1)), dim = -1)
-    encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1].to(device)).view(1, 1, -1)), dim = -1)
+    encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
+    encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
     
     optimizer.zero_grad()
     CEloss, KLloss = model(input_tensor, target_tensor, encoder_hidden, encoder_cell, teacher_force_ratio, criterion)
@@ -302,6 +295,10 @@ def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=100):
             print_loss_total = 0
             print('%s (%d %d%%) %.4f' % (timeSince(start, iter / n_iters),
                                          iter, iter / n_iters * 100, print_loss_avg))
+
+
+    
+
 
     
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
