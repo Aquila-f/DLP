@@ -406,6 +406,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
             bleu_score, mean_h, logvar_h, mean_c, logvar_c = test(model, test_list)
             wordsss = model.gaussian_gen(mean_h, logvar_h, mean_c, logvar_c, MAX_LENGTH)
             gaussian_score = Gaussian_score(wordsss)
+            print(mean_h, logvar_h, mean_c, logvar_c)
 #             if gaussian_score > 0.8: print(wordsss)
             
 #             if bleu_score > best_bleu:
@@ -423,7 +424,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
             
         if iter % print_every == 0:
                 
-            print(wordsss)
+#             print(wordsss)
             
             if bleu_score > best_bleu:
                 best_bleu = bleu_score
