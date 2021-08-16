@@ -109,6 +109,15 @@ def Reparameterization_Trick(self, mean, logvar):
 def teacher_force_ratio(epoch, total_epoch):
     return 1-epoch/total_epoch
 
+def kl_cost_annealing(epoch, total_epoch, MonorCycl):
+    if MonorCycl == 'cycle':
+        rang = total_epoch/4
+        li = rang/2
+        zz = epoch%rang
+        if zz < li : return epoch/total_epoch
+        return 1
+    return epoch/total_epoch
+
 
 
 MAX_LENGTH = 15
@@ -229,9 +238,9 @@ class VAE(nn.Module):
 
             if decoder_input.item() == EOS_token:
                 break
-        return pred_idx, mean_h, logvar_h, mean_c, logvar_c
+        return pred_idx
     
-    def gaussian_gen(self, mean_h, logvar_h, mean_c, logvar_c, maxlen):
+    def gaussian_gen(self,maxlen):
         wordssss = []
         tense = torch.tensor([[0],[1],[2],[3]]).to(device)
         for n in range(100):
@@ -329,14 +338,14 @@ def test(model, testlist):
         encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
         encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
         
-        pred ,mean_h, logvar_h, mean_c, logvar_c = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
+        pred = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
         pred_txt = idx2word(pred)
         bleu_Score += compute_bleu(idx2word(pred), idx2word(target_tensor[0].to(device)))
         
         
         
         
-    return bleu_Score/len(testlist), mean_h, logvar_h, mean_c, logvar_c
+    return bleu_Score/len(testlist)
     
     
 def asMinutes(s):
@@ -352,20 +361,6 @@ def timeSince(since, percent):
     rs = es - s
     return '%s (- %s)' % (asMinutes(s), asMinutes(rs))
     
-    
-
-#     encoder_outputs = torch.zeros(max_length, encoder.hidden_size, device=device)
-
-    
-    #----------sequence to sequence part for encoder----------#
-
-    
-#     decoder_hidden = encoder_hidden ??
-#     decoder_cell = encoder_cell     ??
-
-
-    #----------sequence to sequence part for decoder----------#
-    
 
 
 def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
@@ -377,7 +372,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
     print_loss_total = 0  # Reset every print_every
     plot_loss_total = 0  # Reset every plot_every
     CEloss_t, KLloss_t = 0, 0
-    best_bleu = 80
+    best_bleu = 0.6
     
     optimizer = optim.SGD(model.parameters(), lr=LR)
     
@@ -392,6 +387,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
         input_tensor = training_pair[0]
         target_tensor = training_pair[1]
         t_f_r = teacher_force_ratio(iter ,n_iters)
+        KLD_weight = kl_cost_annealing(iter, n_iters, KLD_weight_type)
         
         model.train()
         CEloss, KLloss, loss = train(model, input_tensor, target_tensor, optimizer, criterion, 
@@ -405,8 +401,8 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
         
         if iter % plot_every == 0:
             model.eval() 
-            bleu_score, mean_h, logvar_h, mean_c, logvar_c = test(model, test_list)
-            wordsss = model.gaussian_gen(mean_h, logvar_h, mean_c, logvar_c, MAX_LENGTH)
+            bleu_score = test(model, test_list)
+            wordsss = model.gaussian_gen(MAX_LENGTH)
             gaussian_score = Gaussian_score(wordsss)
 #             if gaussian_score > 0.8: print(wordsss)
             
@@ -455,8 +451,7 @@ hidden_size = 256
 vocab_size = 28
 condition_size = 8
 latent_size = 32
-empty_input_ratio = 0.05
-KLD_weight = 0.0
+KLD_weight_type = 'mono'
 LR = 0.1
 path = ''
 
