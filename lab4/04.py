@@ -455,7 +455,7 @@ hidden_size = 256
 vocab_size = 28
 condition_size = 8
 latent_size = 32
-KLD_weight_type = 'mono'
+KLD_weight_type = 'cycle'
 LR = 0.1
 path = ''
 
