@@ -366,7 +366,7 @@ def timeSince(since, percent):
     
 
 
-def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=2000):
+def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
     start = time.time()
     plot_celosses = []
     plot_kllosses = []
