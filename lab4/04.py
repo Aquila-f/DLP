@@ -110,16 +110,16 @@ def teacher_force_ratio(epoch, total_epoch):
     return 1-epoch/total_epoch
 
 def kl_cost_annealing(epoch, total_epoch, MonorCycl):
-    return 0.0
-#     if MonorCycl == 'cycle':
-#         rang = total_epoch/4
-#         li = rang/2
-#         zz = epoch%rang
-#         if zz < li : return epoch/total_epoch
-#         return 1
-#     else:
-#         if epoch < 35000: return 0
-#         return (epoch-35000)/total_epoch
+#     return 0.05
+    if MonorCycl == 'cycle':
+        rang = total_epoch/4
+        li = rang/2
+        zz = epoch%rang
+        if zz < li : return epoch/total_epoch
+        return 1
+    else:
+        if epoch < 50000: return 0
+        return (epoch-50000)/total_epoch
 
 
 
@@ -473,5 +473,5 @@ path = ''
 # training_pairs = [tensorsFromPair(random.randint(0, len(train_list)), train_list) for i in range(50)]
 
 vae = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
-trainIters(vae, 75000, LR, path, print_every=2000)
+trainIters(vae, 10000, LR, path, print_every=2000)
 
