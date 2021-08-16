@@ -314,7 +314,7 @@ vocab_size = 28
 condition_size = 8
 latent_size = 32
 empty_input_ratio = 0.1
-KLD_weight = 0.1
+KLD_weight = 0.0
 LR = 0.01
 path = ''
 
