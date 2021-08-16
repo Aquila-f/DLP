@@ -28,6 +28,22 @@ def compute_bleu(output, reference):
         weights = (0.25,0.25,0.25,0.25)
     return sentence_bleu([reference], output,weights=weights,smoothing_function=cc.method1)
 
+def Gaussian_score(words):
+    words_list = []
+    score = 0
+    yourpath = 'train.txt'#should be your directory of train.txt
+    with open(yourpath,'r') as fp:
+        for line in fp:
+            word = line.split(' ')
+            word[3] = word[3].strip('\n')
+            words_list.extend([word])
+        for t in words:
+            for i in words_list:
+                if t == i:
+                    score += 1
+    return score/len(words)
+
+
 def getdatafromtxt(path, mode):
     word = []
     with open('{}{}.txt'.format(path, mode), 'r') as file:
@@ -156,6 +172,7 @@ class VAE(nn.Module):
         #----------sequence to sequence part for decoder----------#
 #         predict_idx = []
 #         pred_distribution = []
+
         
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
         
@@ -199,21 +216,45 @@ class VAE(nn.Module):
         decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
         
         decoder_input = torch.tensor([[SOS_token]], device=device)
-        
-        pred_idx = []
+        pred_idx = torch.tensor([]).to(device)
         
         for de_idx in range(target_length):
             decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
             topv, topi = decoder_output.topk(1)
             decoder_input = topi.squeeze().detach()  # detach from history as input
-            pred_idx.append(decoder_input.tolist())
+#             pred_idx = .append(decoder_input.tolist())
+            pred_idx = torch.cat((pred_idx, decoder_input.view(1,-1)),0)
 
             if decoder_input.item() == EOS_token:
                 break
-        return pred_idx
-        
-        
-        
+        return pred_idx, mean_h, logvar_h, mean_c, logvar_c
+    
+    def gaussian_gen(self, mean_h, logvar_h, mean_c, logvar_c, maxlen):
+        wordssss = []
+        tense = torch.tensor([[0],[1],[2],[3]]).to(device)
+        for n in range(100):
+            word = []
+            latent_h = self.Reparameterization_Trick(mean_h, logvar_h)
+            latent_c = self.Reparameterization_Trick(mean_c, logvar_c)
+            
+            for tensor in tense:
+                decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(tensor).view(1, 1, -1)), dim = -1))
+                decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(tensor).view(1, 1, -1)), dim = -1))
+                decoder_input = torch.tensor([[SOS_token]], device=device)
+                pred_idx = torch.tensor([]).to(device)
+                
+                for d in range(maxlen):
+                    decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
+                    topv, topi = decoder_output.topk(1)
+                    decoder_input = topi.squeeze().detach()  # detach from history as input
+                    pred_idx = torch.cat((pred_idx, decoder_input.view(1, -1)), 0)
+
+                    if decoder_input.item() == EOS_token:
+                        break
+                word.append(idx2word(pred_idx))
+            wordssss.append(word)
+            
+        return wordssss
         
         
         
@@ -259,7 +300,7 @@ class VAE(nn.Module):
         def initHidden(self):
             return torch.zeros(1, 1, self.hidden_size, device=device)
         
-def train(model, input_tensor, target_tensor, optimizer, criterion, teacher_force_ratio, kl_w, max_length=MAX_LENGTH):
+def train(model, input_tensor, target_tensor, optimizer, criterion, teacher_force_ratio, kl_w):
     
     
     encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
@@ -285,13 +326,14 @@ def test(model, testlist):
         encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
         encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
         
-        pred = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
-        bleu_Score += compute_bleu(idx2word(torch.tensor(pred).to(device)), idx2word(target_tensor[0].to(device)))
+        pred ,mean_h, logvar_h, mean_c, logvar_c = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
+        pred_txt = idx2word(pred)
+        bleu_Score += compute_bleu(idx2word(pred), idx2word(target_tensor[0].to(device)))
         
         
         
         
-    return bleu_Score/len(testlist)
+    return bleu_Score/len(testlist), mean_h, logvar_h, mean_c, logvar_c
     
     
 def asMinutes(s):
@@ -328,10 +370,12 @@ def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=500):
     plot_celosses = []
     plot_kllosses = []
     plot_bleu = []
+    plot_gau = []
     print_loss_total = 0  # Reset every print_every
     plot_loss_total = 0  # Reset every plot_every
     CEloss_t, KLloss_t = 0, 0
-
+    best_bleu = 80
+    
     optimizer = optim.SGD(model.parameters(), lr=LR)
     
     train_list = getdatafromtxt(path,'train')
@@ -339,7 +383,6 @@ def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=500):
 #     training_pairs = [tensorsFromPair(random.randint(0, len(train_list)), train_list) for i in range(n_iters)]
     
     criterion = nn.CrossEntropyLoss()
-    
 
     for iter in tqdm(range(1, n_iters + 1)):
         training_pair = tensorsFromPair(random.randint(0, len(train_list)-1), train_list)
@@ -349,7 +392,7 @@ def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=500):
         
         model.train()
         CEloss, KLloss, loss = train(model, input_tensor, target_tensor, optimizer, criterion, 
-                                         t_f_r, KLD_weight, max_length=MAX_LENGTH)
+                                         t_f_r, KLD_weight)
         
         
         CEloss_t += CEloss
@@ -359,15 +402,23 @@ def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=500):
         
         if iter % plot_every == 0:
             model.eval() 
-            bleu_score = test(model, test_list)
+            bleu_score, mean_h, logvar_h, mean_c, logvar_c = test(model, test_list)
+            wordsss = model.gaussian_gen(mean_h, logvar_h, mean_c, logvar_c, MAX_LENGTH)
+            gaussian_score = Gaussian_score(wordsss)
             
+            if bleu_score > best_bleu:
+                best_bleu = bleu_score
+                troch.save(model.state_dict(),'bleumodel')
+                print('new_best_bleu : {}'.format(bleu_score))
+                
             plot_celosses.append(CEloss_t/plot_every)
             plot_kllosses.append(KLloss_t/plot_every)
             plot_bleu.append(bleu_score)
-            torch.cuda.empty_cache()
+            plot_gau.append(gaussian_score)
+            print('bleu_score : {}, gaussian_score_score : {}'.format(bleu_score, gaussian_score))
             
-            print('bleu : {}'.format(bleu_score))
-
+            
+            
         if iter % print_every == 0:
             
             print_loss_avg = print_loss_total / print_every
