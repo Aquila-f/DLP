@@ -110,16 +110,16 @@ def teacher_force_ratio(epoch, total_epoch):
     return 1-epoch/total_epoch
 
 def kl_cost_annealing(epoch, total_epoch, MonorCycl):
-    
-    if MonorCycl == 'cycle':
-        rang = total_epoch/4
-        li = rang/2
-        zz = epoch%rang
-        if zz < li : return epoch/total_epoch
-        return 1
-    else:
-        if epoch < 25000: return 0
-        return (epoch-25000)/total_epoch
+    return 0.05
+#     if MonorCycl == 'cycle':
+#         rang = total_epoch/4
+#         li = rang/2
+#         zz = epoch%rang
+#         if zz < li : return epoch/total_epoch
+#         return 1
+#     else:
+#         if epoch < 35000: return 0
+#         return (epoch-35000)/total_epoch
 
 
 
@@ -347,9 +347,11 @@ def test(model, testlist, epo):
         
         pred = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
         pred_txt = idx2word(pred)
-        bleu_Score += compute_bleu(idx2word(pred), idx2word(target_tensor[0].to(device)))
+        label = idx2word(target_tensor[0].to(device))
+        inp = idx2word(input_tensor[0].to(device))
+        bleu_Score += compute_bleu(pred_txt, label)
         if pr:
-            print('Input: {:13}Target: {:13}Prediction: {:13}'.format(input_tensor[0], target_tensor[0], pred_txt))
+            print('Input: {:13}Target: {:13}Prediction: {:13}'.format(inp, label, pred_txt))
     if pr:
         print('BLEU-4 score: {:.2f}'.format((bleu_Score/len(testlist)*100)))
         
