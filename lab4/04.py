@@ -17,6 +17,7 @@ import numpy as np
 from os import system
 from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
 from tqdm import tqdm
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def getdatafromtxt(path):
@@ -223,7 +224,7 @@ class VAE(nn.Module):
 def train(model, input_tensor, target_tensor, optimizer, criterion, teacher_force_ratio, kl_w, max_length=MAX_LENGTH):
     
     
-    encoder_hidden = torch.cat((model.encoder.initHidden().to(device), model.embedding_init_c(input_tensor[1]).view(1, 1, -1).to(device)), dim = -1)
+    encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
     encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
     
     optimizer.zero_grad()
