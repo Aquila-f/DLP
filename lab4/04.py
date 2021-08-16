@@ -164,7 +164,7 @@ class VAE(nn.Module):
         latent_c = self.Reparameterization_Trick(mean_c, logvar_c)
         decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
         KLloss_c = -0.5 * torch.sum(1 + logvar_c - mean_c**2 - logvar_c.exp())
-        print(mean_h.shape, logvar_h.shape, mean_c.shape, logvar_c.shape)
+
         
 
         KLloss = KLloss_h + KLloss_c
