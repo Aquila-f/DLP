@@ -110,13 +110,16 @@ def teacher_force_ratio(epoch, total_epoch):
     return 1-epoch/total_epoch
 
 def kl_cost_annealing(epoch, total_epoch, MonorCycl):
+    
     if MonorCycl == 'cycle':
         rang = total_epoch/4
         li = rang/2
         zz = epoch%rang
         if zz < li : return epoch/total_epoch
         return 1
-    return epoch/total_epoch
+    else:
+        if epoch < 25000: return 0
+        return (epoch-25000)/total_epoch
 
 
 
