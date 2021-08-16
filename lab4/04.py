@@ -228,7 +228,7 @@ def train(model, input_tensor, target_tensor, optimizer, criterion, teacher_forc
     encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1].to(device)).view(1, 1, -1)), dim = -1)
     
     optimizer.zero_grad()
-    CEloss, KLloss = model(input_tensor, target_tensor, encoder_hidden, encoder_cell, teacher_forcing_ratio)
+    CEloss, KLloss = model(input_tensor, target_tensor, encoder_hidden, encoder_cell, teacher_force_ratio)
     loss = CEloss + kl_w * KLloss
     loss.backward()
     optimizer.step()
