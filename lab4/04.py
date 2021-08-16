@@ -351,9 +351,6 @@ def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=500):
         CEloss, KLloss, loss = train(model, input_tensor, target_tensor, optimizer, criterion, 
                                          t_f_r, KLD_weight, max_length=MAX_LENGTH)
         
-        model.eval() 
-        bleu_score = test(model, test_list)
-        
         
         CEloss_t += CEloss
         KLloss_t += KLloss
