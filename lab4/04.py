@@ -116,7 +116,7 @@ class VAE(nn.Module):
         
         #----------sequence to sequence part for encoder----------#
         for en_idx in range(input_length):
-            encoder_output, encoder_hidden, encoder_cell = self.encoder(input_tensor[0][en_idx], encoder_hidden, encoder_cell)
+            encoder_output, encoder_hidden, encoder_cell = self.encoder(input_tensor[0][en_idx].to(device), encoder_hidden, encoder_cell)
         
         #----------sequence to sequence part for latent----------#
         mean_h = self.hidden2mean(encoder_hidden)
@@ -147,7 +147,7 @@ class VAE(nn.Module):
             for de_idx in range(target_length):
                 decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
                 CEloss += criterion(decoder_output, target_tensor[0][de_idx].to(device))
-                decoder_input = target_tensor[0][de_idx]  # Teacher forcing
+                decoder_input = target_tensor[0][de_idx].to(device)  # Teacher forcing
 
         else:
             # Without teacher forcing: use its own predictions as the next input
