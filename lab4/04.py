@@ -462,5 +462,5 @@ path = ''
 # training_pairs = [tensorsFromPair(random.randint(0, len(train_list)), train_list) for i in range(50)]
 
 vae = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
-trainIters(vae, 75000, LR, path, print_every=1000)
+trainIters(vae, 75000, LR, path, print_every=2000)
 
