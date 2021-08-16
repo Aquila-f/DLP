@@ -20,12 +20,29 @@ from tqdm import tqdm
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def getdatafromtxt(path):
+def compute_bleu(output, reference):
+    cc = SmoothingFunction()
+    if len(reference) == 3:
+        weights = (0.33,0.33,0.33)
+    else:
+        weights = (0.25,0.25,0.25,0.25)
+    return sentence_bleu([reference], output,weights=weights,smoothing_function=cc.method1)
+
+def getdatafromtxt(path, mode):
     word = []
-    with open('{}train.txt'.format(path), 'r') as file:
+    with open('{}{}.txt'.format(path, mode), 'r') as file:
         for i in file:
             word.extend(i.split('\n')[0].split(' '))
     return word
+
+def comptestlist(listt):
+    t_t_l = [0,3,0,2,0,1,0,1,3,1,0,2,3,0,2,0,2,3,2,1]
+    test = []
+    for i in range(len(listt)):
+        if i%2 == 0:
+            test.append([[word2idx(listt[i]).to(device),torch.tensor([t_t_l[i]]).to(device)],
+                         [word2idx(listt[i+1]).to(device),torch.tensor([t_t_l[i+1]]).to(device)]])
+    return test
 
 def tensorsFromPair(idx, train_list):
     t_n = idx%4
@@ -75,6 +92,8 @@ def Reparameterization_Trick(self, mean, logvar):
 
 def teacher_force_ratio(epoch, total_epoch):
     return 1-epoch/total_epoch
+
+
 
 MAX_LENGTH = 15
 class VAE(nn.Module):
@@ -135,8 +154,8 @@ class VAE(nn.Module):
         
         decoder_input = torch.tensor([[SOS_token]], device=device)
         #----------sequence to sequence part for decoder----------#
-        predict_idx = []
-        pred_distribution = []
+#         predict_idx = []
+#         pred_distribution = []
         
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
         
@@ -146,6 +165,7 @@ class VAE(nn.Module):
                 decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
                 CEloss += criterion(decoder_output, target_tensor[0][de_idx])
                 decoder_input = target_tensor[0][de_idx]  # Teacher forcing
+#                 predict_idx.append(decoder_output.tolist())
 
         else:
             # Without teacher forcing: use its own predictions as the next input
@@ -153,27 +173,47 @@ class VAE(nn.Module):
                 decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
                 topv, topi = decoder_output.topk(1)
                 decoder_input = topi.squeeze().detach()  # detach from history as input
-#                 print(decoder_input)
                 
                 CEloss += criterion(decoder_output, target_tensor[0][de_idx])
                 if decoder_input.item() == EOS_token:
                     break
         
-        
-#         for id_d in range(len(word[0])):
-#             output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_h_init,decoder_c_init)
-#             pred_distribution.append(output[0].tolist())
-#             predict_idx_elem = output.topk(1)[1]
-#             predict_idx.append(predict_idx_elem[0].tolist())
-
-#             if teacher_force:
-#                 decoder_input = word[0][id_d]
-#             else:
-#                 if word[0][id_d].item() == EOS_token:
-#                     break
-#                 decoder_input = predict_idx_elem
-     
         return CEloss/target_length, KLloss
+    
+    def eva8(self, input_tensor, target_tensor, encoder_hidden, encoder_cell):
+        input_length = input_tensor[0].size(0)
+        target_length = target_tensor[0].size(0)
+        
+        for en_idx in range(input_length):
+            encoder_output, encoder_hidden, encoder_cell = self.encoder(input_tensor[0][en_idx], encoder_hidden, encoder_cell)
+        
+        mean_h = self.hidden2mean(encoder_hidden)
+        logvar_h = self.hidden2logvar(encoder_hidden)
+        latent_h = self.Reparameterization_Trick(mean_h, logvar_h)
+        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
+        
+        
+        mean_c = self.cell2mean(encoder_cell)
+        logvar_c = self.cell2logvar(encoder_cell)
+        latent_c = self.Reparameterization_Trick(mean_c, logvar_c)
+        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
+        
+        decoder_input = torch.tensor([[SOS_token]], device=device)
+        
+        pred_idx = []
+        
+        for de_idx in range(target_length):
+            decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
+            topv, topi = decoder_output.topk(1)
+            decoder_input = topi.squeeze().detach()  # detach from history as input
+            pred_idx.append(decoder_input.tolist())
+
+            if decoder_input.item() == EOS_token:
+                break
+        return pred_idx
+        
+        
+        
         
         
         
@@ -232,6 +272,26 @@ def train(model, input_tensor, target_tensor, optimizer, criterion, teacher_forc
     optimizer.step()
     
     return CEloss, KLloss, loss
+
+def test(model, testlist):
+    
+    bleu_Score = 0
+    for test_choose in testlist:
+        input_tensor = test_choose[0]
+        target_tensor = test_choose[1]
+#         print(input_tensor)
+#         print(target_tensor)
+        
+        encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
+        encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
+        
+        pred = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
+        bleu_Score += compute_bleu(idx2word(torch.tensor(pred).to(device)), idx2word(torch.tensor(target_tensor[0]).to(device)))
+        
+        
+        
+        
+    return bleu_Score/len(testlist)
     
     
 def asMinutes(s):
@@ -263,16 +323,20 @@ def timeSince(since, percent):
     
 
 
-def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=100):
+def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=500):
     start = time.time()
     plot_celosses = []
     plot_kllosses = []
+    plot_bleu = []
     print_loss_total = 0  # Reset every print_every
     plot_loss_total = 0  # Reset every plot_every
+    CEloss_t, KLloss_t = 0, 0
+    plot_bleu_total = 0
 
     optimizer = optim.SGD(model.parameters(), lr=LR)
     
-    train_list = getdatafromtxt(path)
+    train_list = getdatafromtxt(path,'train')
+    test_list = comptestlist(getdatafromtxt(path,'test'))
 #     training_pairs = [tensorsFromPair(random.randint(0, len(train_list)), train_list) for i in range(n_iters)]
     
     criterion = nn.CrossEntropyLoss()
@@ -284,13 +348,28 @@ def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=100):
         target_tensor = training_pair[1]
         t_f_r = teacher_force_ratio(iter ,n_iters)
         
+        model.train()
         CEloss, KLloss, loss = train(model, input_tensor, target_tensor, optimizer, criterion, 
                                          t_f_r, KLD_weight, max_length=MAX_LENGTH)
         
+        model.eval() 
+        bleu_score = test(model, test_list)
+        
+        
+        CEloss_t += CEloss
+        KLloss_t += KLloss
+        plot_bleu_total += bleu_score
         print_loss_total += loss
-        plot_loss_total += loss
+
+        
+        if iter % plot_every == 0:
+            plot_celosses.append(CEloss_t/plot_every)
+            plot_kllosses.append(KLloss_t/plot_every)
+            plot_bleu.append(plot_bleu_total/plot_every)
+            print('bleu : {}'.format(plot_bleu_total/plot_every))
 
         if iter % print_every == 0:
+            
             print_loss_avg = print_loss_total / print_every
             print_loss_total = 0
             print('%s (%d %d%%) %.4f' % (timeSince(start, iter / n_iters),
@@ -319,6 +398,5 @@ path = ''
 # training_pairs = [tensorsFromPair(random.randint(0, len(train_list)), train_list) for i in range(50)]
 
 vae = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
-
 trainIters(vae, 75000, LR, path, print_every=1000)
 
