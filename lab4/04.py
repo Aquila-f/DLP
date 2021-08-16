@@ -122,14 +122,14 @@ class VAE(nn.Module):
         mean_h = self.hidden2mean(encoder_hidden)
         logvar_h = self.hidden2logvar(encoder_hidden)
         latent_h = self.Reparameterization_Trick(mean_h, logvar_h)
-        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
+        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(target_tensor[1].to(device)).view(1, 1, -1)), dim = -1))
         KLloss_h = -0.5 * torch.sum(1 + logvar_h - mean_h**2 - logvar_h.exp())
 
 
         mean_c = self.cell2mean(encoder_cell)
         logvar_c = self.cell2logvar(encoder_cell)
         latent_c = self.Reparameterization_Trick(mean_c, logvar_c)
-        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
+        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(target_tensor[1].to(device)).view(1, 1, -1)), dim = -1))
         KLloss_c = -0.5 * torch.sum(1 + logvar_c - mean_c**2 - logvar_c.exp())
 
         KLloss = KLloss_h + KLloss_c
@@ -146,7 +146,7 @@ class VAE(nn.Module):
         # Teacher forcing: Feed the target as the next input
             for de_idx in range(target_length):
                 decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
-                CEloss += criterion(decoder_output, target_tensor[0][de_idx])
+                CEloss += criterion(decoder_output, target_tensor[0][de_idx].to(device))
                 decoder_input = target_tensor[0][de_idx]  # Teacher forcing
 
         else:
@@ -155,9 +155,9 @@ class VAE(nn.Module):
                 decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
                 topv, topi = decoder_output.topk(1)
                 decoder_input = topi.squeeze().detach()  # detach from history as input
-                print(decoder_input)
+                #print(decoder_input)
                 
-                CEloss += criterion(decoder_output, target_tensor[0][de_idx])
+                CEloss += criterion(decoder_output, target_tensor[0][de_idx].to(device))
                 if decoder_input.item() == EOS_token:
                     break
         
