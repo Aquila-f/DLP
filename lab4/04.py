@@ -164,6 +164,8 @@ class VAE(nn.Module):
         latent_c = self.Reparameterization_Trick(mean_c, logvar_c)
         decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
         KLloss_c = -0.5 * torch.sum(1 + logvar_c - mean_c**2 - logvar_c.exp())
+        print(mean_h.shape, logvar_h.shape, mean_c.shape, logvar_c.shape)
+        
 
         KLloss = KLloss_h + KLloss_c
         
@@ -234,8 +236,8 @@ class VAE(nn.Module):
         tense = torch.tensor([[0],[1],[2],[3]]).to(device)
         for n in range(100):
             word = []
-            latent_h = self.Reparameterization_Trick(mean_h, logvar_h)
-            latent_c = self.Reparameterization_Trick(mean_c, logvar_c)
+            latent_h = torch.randn_like(torch.zeros(1, 1, 32)).to(device)
+            latent_c = torch.randn_like(torch.zeros(1, 1, 32)).to(device)
             
             for tensor in tense:
                 decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(tensor).view(1, 1, -1)), dim = -1))
@@ -406,7 +408,6 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
             bleu_score, mean_h, logvar_h, mean_c, logvar_c = test(model, test_list)
             wordsss = model.gaussian_gen(mean_h, logvar_h, mean_c, logvar_c, MAX_LENGTH)
             gaussian_score = Gaussian_score(wordsss)
-            print(mean_h, logvar_h, mean_c, logvar_c)
 #             if gaussian_score > 0.8: print(wordsss)
             
 #             if bleu_score > best_bleu:
@@ -424,7 +425,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
             
         if iter % print_every == 0:
                 
-#             print(wordsss)
+            print(wordsss)
             
             if bleu_score > best_bleu:
                 best_bleu = bleu_score
