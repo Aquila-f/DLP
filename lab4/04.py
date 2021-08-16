@@ -87,7 +87,7 @@ class VAE(nn.Module):
         self.latent_size = latent_size
         
         
-        self.embedding_init_c = nn.Embedding(4, condition_size).to(device)
+        self.embedding_init_c = nn.Embedding(4, condition_size, device = device)
 #         self.init_h2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
 #         self.init_c2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
         
