@@ -331,9 +331,11 @@ def train(model, input_tensor, target_tensor, optimizer, criterion, teacher_forc
     
     return CEloss, KLloss, loss
 
-def test(model, testlist):
+def test(model, testlist, epo):
     
     bleu_Score = 0
+    pr = True if epo%2000==0 else False
+    if pr: print('Tense conversion')
     for test_choose in testlist:
         input_tensor = test_choose[0]
         target_tensor = test_choose[1]
@@ -346,6 +348,10 @@ def test(model, testlist):
         pred = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
         pred_txt = idx2word(pred)
         bleu_Score += compute_bleu(idx2word(pred), idx2word(target_tensor[0].to(device)))
+        if pr:
+            print('Input: {:13}Target: {:13}Prediction: {:13}'.format(input_tensor[0], target_tensor[0], pred_txt))
+    if pr:
+        print('BLEU-4 score: {:.2f}'.format((bleu_Score/len(testlist)*100)))
         
         
         
@@ -407,7 +413,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
         if iter % plot_every == 0:
             model.eval() 
             torch.no_grad()
-            bleu_score = test(model, test_list)
+            bleu_score = test(model, test_list, iter)
             wordsss = model.gaussian_gen(MAX_LENGTH)
             gaussian_score = Gaussian_score(wordsss)
             
