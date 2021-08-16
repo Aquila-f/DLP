@@ -33,7 +33,7 @@ def tensorsFromPair(idx, train_list):
     ind_f = idx - t_n
     consin_c = ind_f + (t_n + ch_n)%4
     
-    return [word2idx(train_list[idx]), torch.tensor([idx%4])] , [word2idx(train_list[consin_c]), torch.tensor([consin_c%4])]
+    return [word2idx(train_list[idx]).to(device), torch.tensor([idx%4]).to(device)] , [word2idx(train_list[consin_c]).to(device), torch.tensor([consin_c%4]).to(device)]
 
 def creat_char2idx_dict():
     s = {'SOS':0,'EOS':1}
@@ -75,6 +75,12 @@ def Reparameterization_Trick(self, mean, logvar):
 
 def teacher_force_ratio(epoch, total_epoch):
     return 1-epoch/total_epoch
+
+
+
+
+    
+
 
 
 MAX_LENGTH = 15
