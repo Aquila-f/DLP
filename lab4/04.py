@@ -364,6 +364,7 @@ def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=500):
             plot_celosses.append(CEloss_t/plot_every)
             plot_kllosses.append(KLloss_t/plot_every)
             plot_bleu.append(bleu_score)
+            torch.cuda.empty_cache()
             
             print('bleu : {}'.format(bleu_score))
 
