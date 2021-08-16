@@ -286,7 +286,7 @@ def test(model, testlist):
         encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
         
         pred = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
-        bleu_Score += compute_bleu(idx2word(torch.tensor(pred).to(device)), idx2word(torch.tensor(target_tensor[0]).to(device)))
+        bleu_Score += compute_bleu(idx2word(torch.tensor(pred).to(device)), idx2word(target_tensor[0].to(device)))
         
         
         
@@ -331,7 +331,6 @@ def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=500):
     print_loss_total = 0  # Reset every print_every
     plot_loss_total = 0  # Reset every plot_every
     CEloss_t, KLloss_t = 0, 0
-    plot_bleu_total = 0
 
     optimizer = optim.SGD(model.parameters(), lr=LR)
     
@@ -358,15 +357,18 @@ def trainIters(model, n_iters, LR, path, print_every=1000, plot_every=500):
         
         CEloss_t += CEloss
         KLloss_t += KLloss
-        plot_bleu_total += bleu_score
         print_loss_total += loss
 
         
         if iter % plot_every == 0:
+            model.eval() 
+            bleu_score = test(model, test_list)
+            
             plot_celosses.append(CEloss_t/plot_every)
             plot_kllosses.append(KLloss_t/plot_every)
-            plot_bleu.append(plot_bleu_total/plot_every)
-            print('bleu : {}'.format(plot_bleu_total/plot_every))
+            plot_bleu.append(bleu_score)
+            
+            print('bleu : {}'.format(bleu_score))
 
         if iter % print_every == 0:
             
