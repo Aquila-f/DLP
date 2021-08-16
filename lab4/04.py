@@ -404,11 +404,12 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
         
         if iter % plot_every == 0:
             model.eval() 
+            torch.no_grad()
             bleu_score = test(model, test_list)
             wordsss = model.gaussian_gen(MAX_LENGTH)
             gaussian_score = Gaussian_score(wordsss)
-#             if gaussian_score > 0.8: print(wordsss)
             
+#             if gaussian_score > 0.8: print(wordsss)
 #             if bleu_score > best_bleu:
 #                 best_bleu = bleu_score
 #                 troch.save(model.state_dict(),'bleumodel')
@@ -424,11 +425,11 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
             
         if iter % print_every == 0:
                 
-            print(wordsss)
+#             print(wordsss)
             
             if bleu_score > best_bleu:
                 best_bleu = bleu_score
-                troch.save(model.state_dict(),'bleumodel')
+                torch.save(model.state_dict(),'bleumodel')
                 print('new_best_bleu : {}'.format(bleu_score))
             
             print('bleu_score : {}, gaussian_score_score : {}'.format(bleu_score, gaussian_score))
