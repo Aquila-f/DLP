@@ -77,7 +77,6 @@ def teacher_force_ratio(epoch, total_epoch):
     return 1-epoch/total_epoch
 
 
-
 MAX_LENGTH = 15
 class VAE(nn.Module):
     def __init__(self, input_size, hidden_size, condition_size, latent_size):
@@ -88,7 +87,7 @@ class VAE(nn.Module):
         self.latent_size = latent_size
         
         
-        self.embedding_init_c = nn.Embedding(4, condition_size, device = device)
+        self.embedding_init_c = nn.Embedding(4, condition_size).to(device)
 #         self.init_h2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
 #         self.init_c2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
         
@@ -108,7 +107,7 @@ class VAE(nn.Module):
         return mean + eps * std
         
         
-    def forward(self, input_tensor, target_tensor, encoder_hidden, encoder_cell, teacher_forcing_ratio):
+    def forward(self, input_tensor, target_tensor, encoder_hidden, encoder_cell, teacher_forcing_ratio, criterion):
         
         input_length = input_tensor[0].size(0)
         target_length = target_tensor[0].size(0)
@@ -116,7 +115,7 @@ class VAE(nn.Module):
         
         #----------sequence to sequence part for encoder----------#
         for en_idx in range(input_length):
-            encoder_output, encoder_hidden, encoder_cell = self.encoder(input_tensor[0][en_idx].to(device), encoder_hidden, encoder_cell)
+            encoder_output, encoder_hidden, encoder_cell = self.encoder(input_tensor[0][en_idx], encoder_hidden, encoder_cell)
         
         #----------sequence to sequence part for latent----------#
         mean_h = self.hidden2mean(encoder_hidden)
@@ -147,7 +146,7 @@ class VAE(nn.Module):
             for de_idx in range(target_length):
                 decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
                 CEloss += criterion(decoder_output, target_tensor[0][de_idx].to(device))
-                decoder_input = target_tensor[0][de_idx].to(device)  # Teacher forcing
+                decoder_input = target_tensor[0][de_idx]  # Teacher forcing
 
         else:
             # Without teacher forcing: use its own predictions as the next input
@@ -155,7 +154,7 @@ class VAE(nn.Module):
                 decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
                 topv, topi = decoder_output.topk(1)
                 decoder_input = topi.squeeze().detach()  # detach from history as input
-                #print(decoder_input)
+#                 print(decoder_input)
                 
                 CEloss += criterion(decoder_output, target_tensor[0][de_idx].to(device))
                 if decoder_input.item() == EOS_token:
@@ -228,7 +227,7 @@ def train(model, input_tensor, target_tensor, optimizer, criterion, teacher_forc
     encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1].to(device)).view(1, 1, -1)), dim = -1)
     
     optimizer.zero_grad()
-    CEloss, KLloss = model(input_tensor, target_tensor, encoder_hidden, encoder_cell, teacher_force_ratio)
+    CEloss, KLloss = model(input_tensor, target_tensor, encoder_hidden, encoder_cell, teacher_force_ratio, criterion)
     loss = CEloss + kl_w * KLloss
     loss.backward()
     optimizer.step()
