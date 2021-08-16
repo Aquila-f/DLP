@@ -107,19 +107,19 @@ def Reparameterization_Trick(self, mean, logvar):
     return mean + eps * std
 
 def teacher_force_ratio(epoch, total_epoch):
-    return 1-epoch/total_epoch
+    return 0.8*(1-epoch/total_epoch)
 
 def kl_cost_annealing(epoch, total_epoch, MonorCycl):
-#     return 0.05
+    
     if MonorCycl == 'cycle':
         rang = total_epoch/4
         li = rang/2
         zz = epoch%rang
-        if zz < li : return epoch/total_epoch
-        return 1
+        if zz < li : return 0.3*(zz/li)
+        return 0.3
     else:
-        if epoch < 50000: return 0
-        return (epoch-50000)/total_epoch
+        if epoch < 15000: return 0
+        return 0.3*((epoch-15000)/total_epoch)
 
 
 
@@ -376,7 +376,7 @@ def timeSince(since, percent):
     
 
 
-def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
+def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
     start = time.time()
     plot_celosses = []
     plot_kllosses = []
@@ -386,17 +386,20 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
     plot_loss_total = 0  # Reset every plot_every
     CEloss_t, KLloss_t = 0, 0
     best_bleu = 0.6
+    best_gau = 0.05
     
     optimizer = optim.SGD(model.parameters(), lr=LR)
     
     train_list = getdatafromtxt(path,'train')
     test_list = comptestlist(getdatafromtxt(path,'test'))
-#     training_pairs = [tensorsFromPair(random.randint(0, len(train_list)), train_list) for i in range(n_iters)]
+
     
     criterion = nn.CrossEntropyLoss()
 
     for iter in tqdm(range(1, n_iters + 1)):
-        training_pair = tensorsFromPair(random.randint(0, len(train_list)-1), train_list)
+        training_pair = tensorsFromPair(
+            random.randint(0, len(train_list)-1), train_list)
+        
         input_tensor = training_pair[0]
         target_tensor = training_pair[1]
         t_f_r = teacher_force_ratio(iter ,n_iters)
@@ -419,6 +422,16 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
             wordsss = model.gaussian_gen(MAX_LENGTH)
             gaussian_score = Gaussian_score(wordsss)
             
+            if bleu_score > best_bleu:
+                best_bleu = bleu_score
+                torch.save(model.state_dict(),'bleumodel')
+                print('new_best_bleu : {}'.format(best_bleu))
+            
+            if gaussian_score > best_gau:
+                best_gau = gaussian_score
+                torch.save(model.state_dict(),'gaussianmodel')
+                print('new_best_gaussian : {}'.format(best_gau))
+                
 #             if gaussian_score > 0.8: print(wordsss)
 #             if bleu_score > best_bleu:
 #                 best_bleu = bleu_score
@@ -434,26 +447,16 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=500):
             
             
         if iter % print_every == 0:
-                
-#             print(wordsss)
-            
-            if bleu_score > best_bleu:
-                best_bleu = bleu_score
-                torch.save(model.state_dict(),'bleumodel')
-                print('new_best_bleu : {}'.format(bleu_score))
-            
             print('bleu_score : {}, gaussian_score_score : {}'.format(bleu_score, gaussian_score))
             print('+-------------------------------------------------------------------------+')
+        
+        if iter == 50000:
+            print(plot_celosses)
+            print(plot_kllosses)
+            print(plot_bleu)
+            print(plot_gau)
             
-            
-#             print_loss_avg = print_loss_total / print_every
-#             print_loss_total = 0
-#             print('%s (%d %d%%) %.4f' % (timeSince(start, iter / n_iters),
-#                                          iter, iter / n_iters * 100, print_loss_avg))
-
-
-    
-
+        
 
     
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -465,7 +468,7 @@ hidden_size = 256
 vocab_size = 28
 condition_size = 8
 latent_size = 32
-KLD_weight_type = 'mono'
+KLD_weight_type = 'cycle'
 LR = 0.08
 path = ''
 
@@ -473,5 +476,5 @@ path = ''
 # training_pairs = [tensorsFromPair(random.randint(0, len(train_list)), train_list) for i in range(50)]
 
 vae = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
-trainIters(vae, 10000, LR, path, print_every=2000)
+trainIters(vae, 100000, LR, path, print_every=2000)
 
