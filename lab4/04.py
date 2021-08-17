@@ -466,7 +466,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             print('bleu_score : {}, gaussian_score_score : {}'.format(bleu_score, gaussian_score))
             print('+-------------------------------------------------------------------------+')
         
-        if iter == 50000:
+        if iter%50000==0:
             print(plot_celosses)
             print(plot_kllosses)
             print(plot_bleu)
