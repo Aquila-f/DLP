@@ -465,7 +465,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             
             
         if iter % print_every == 0:
-            print('bleu_score : {}, gaussian_score_score : {}'.format(bleu_score, gaussian_score))
+            print('bleu_score:{:.4f}, gaussian_score:{}, CEloss:{:.4f}, KLloss:{:.4f}'.format(bleu_score, gaussian_score, CEloss.item() ,KLloss.item()))
             print('+-------------------------------------------------------------------------+')
         
         if iter == 50000:
