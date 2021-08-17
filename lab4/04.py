@@ -119,8 +119,8 @@ def kl_cost_annealing(epoch, total_epoch, MonorCycl):
         if zz < li : return 0.3*(zz/li)
         return 0.3
     else:
-        if epoch < 25000: return 0
-        return 0.3*((epoch-25000)/total_epoch)
+        if epoch < 20000: return 0
+        return 0.3*((epoch-20000)/total_epoch)
 
 
 
@@ -490,7 +490,7 @@ vocab_size = 28
 condition_size = 8
 latent_size = 32
 KLD_weight_type = 'mono'
-LR = 0.1
+LR = 0.08
 path = ''
 
 # train_list = getdatafromtxt('')
