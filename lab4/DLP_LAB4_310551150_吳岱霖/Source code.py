@@ -57,8 +57,8 @@ def comptestlist(listt):
     test = []
     for i in range(len(listt)):
         if i%2 == 0:
-            test.append([[word2idx(listt[i]),torch.tensor([t_t_l[i]])],
-                         [word2idx(listt[i+1]),torch.tensor([t_t_l[i+1]])]])
+            test.append([[word2idx(listt[i]).to(device),torch.tensor([t_t_l[i]]).to(device)],
+                         [word2idx(listt[i+1]).to(device),torch.tensor([t_t_l[i+1]]).to(device)]])
     return test
 
 def tensorsFromPair(idx, train_list):
@@ -67,7 +67,7 @@ def tensorsFromPair(idx, train_list):
     ind_f = idx - t_n
     consin_c = ind_f + (t_n + ch_n)%4
     
-    return [word2idx(train_list[idx]), torch.tensor([idx%4])] , [word2idx(train_list[consin_c]), torch.tensor([consin_c%4])]
+    return [word2idx(train_list[idx]).to(device), torch.tensor([idx%4]).to(device)] , [word2idx(train_list[consin_c]).to(device), torch.tensor([consin_c%4]).to(device)]
 
 def creat_char2idx_dict():
     s = {'SOS':0,'EOS':1}
@@ -233,7 +233,7 @@ class VAE(nn.Module):
         decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
         
         decoder_input = torch.tensor([[SOS_token]], device=device)
-        pred_idx = torch.tensor([])
+        pred_idx = torch.tensor([]).to(device)
         
         for de_idx in range(target_length):
             decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
@@ -248,11 +248,11 @@ class VAE(nn.Module):
     
     def gaussian_gen(self,maxlen):
         wordssss = []
-        tense = torch.tensor([[0],[1],[2],[3]])
+        tense = torch.tensor([[0],[1],[2],[3]]).to(device)
         for n in range(100):
             word = []
-            latent_h = torch.randn_like(torch.zeros(1, 1, 32))
-            latent_c = torch.randn_like(torch.zeros(1, 1, 32))
+            latent_h = torch.randn_like(torch.zeros(1, 1, 32)).to(device)
+            latent_c = torch.randn_like(torch.zeros(1, 1, 32)).to(device)
             
             for tensor in tense:
                 decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(tensor).view(1, 1, -1)), dim = -1))
@@ -442,9 +442,6 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             plot_kllosses.append(KLloss_t/plot_every)
             plot_bleu.append(bleu_score)
             plot_gau.append(gaussian_score)
-            
-            CEloss_t = 0
-            KLloss_t = 0
 #             print('bleu_score : {}, gaussian_score_score : {}'.format(bleu_score, gaussian_score))
             
             
