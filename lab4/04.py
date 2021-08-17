@@ -421,7 +421,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
         
         
         t_f_r = teacher_force_ratio(iter ,n_iters, t_startfrom, t_most)
-        KLD_weight = kl_cost_annealing(iter, n_iters, KLD_weight_type, klm_stf, klm_m, klc_c, klc_m)
+        KLD_weight = 0.3 + kl_cost_annealing(iter, n_iters, KLD_weight_type, klm_stf, klm_m, klc_c, klc_m)
         
         model.train()
         CEloss, KLloss, loss = train(model, inp_word, inp_te, outp_word, outp_te, optimizer, criterion, 
@@ -478,7 +478,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             print("'klloss' : {},".format(plot_kllosses))
             print("'bleu' : {},".format(plot_bleu))
             print("'gru' : {}".format(plot_gau))
-            torch.save(model.state_dict(),'cont2')
+            torch.save(model.state_dict(),'cont3')
             print('model save...')
             
         
@@ -499,7 +499,7 @@ path = ''
 #------------
 t_startfrom = 25000
 t_most = 0.3
-klm_stf = 25000
+klm_stf = 0
 klm_m = 0.3
 klc_c = 2
 klc_m = 0.25
@@ -513,6 +513,6 @@ KLD_weight_type = 'mono'
 # training_pairs = [tensorsFromPair(random.randint(0, len(train_list)), train_list) for i in range(50)]
 
 vae = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
-vae.load_state_dict(torch.load('cont1'))
+vae.load_state_dict(torch.load('cont2'))
 trainIters(vae, 100000, LR, path, print_every=2000)
 
