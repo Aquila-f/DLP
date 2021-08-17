@@ -498,8 +498,8 @@ path = ''
 
 #------------
 t_startfrom = 25000
-t_most = 0.3
-klm_stf = 20000
+t_most = 0.1
+klm_stf = 25000
 klm_m = 0.3
 klc_c = 2
 klc_m = 0.25
