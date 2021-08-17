@@ -108,10 +108,10 @@ def Reparameterization_Trick(self, mean, logvar):
     return mean + eps * std
 
 def teacher_force_ratio(epoch, total_epoch):
-    return 0.8*(1-epoch/total_epoch)
+    if epoch < 20000: return 1
+    return 1-0.3*((epoch-20000)/total_epoch)
 
 def kl_cost_annealing(epoch, total_epoch, MonorCycl):
-    
     if MonorCycl == 'cycle':
         rang = total_epoch/4
         li = rang/2
@@ -119,8 +119,8 @@ def kl_cost_annealing(epoch, total_epoch, MonorCycl):
         if zz < li : return 0.3*(zz/li)
         return 0.3
     else:
-        if epoch < 15000: return 0
-        return 0.3*((epoch-15000)/total_epoch)
+        if epoch < 25000: return 0
+        return 0.3*((epoch-25000)/total_epoch)
 
 
 
