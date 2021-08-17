@@ -342,10 +342,10 @@ def test(model, testlist, epo):
         input_tensor = test_choose[0]
         target_tensor = test_choose[1]
         
-        inp_word = torch.tensor(input_tensor[0]).to(device)
-        inp_te = torch.tensor(input_tensor[1]).to(device)
-        outp_word = torch.tensor(target_tensor[0]).to(device)
-        outp_te = torch.tensor(target_tensor[1]).to(device)
+        inp_word = input_tensor[0].to(device)
+        inp_te = input_tensor[1].to(device)
+        outp_word = target_tensor[0].to(device)
+        outp_te = target_tensor[1].to(device)
         
 #         print(input_tensor)
 #         print(target_tensor)
@@ -411,10 +411,11 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
         input_tensor = training_pair[0]
         target_tensor = training_pair[1]
         
-        inp_word = torch.tensor(input_tensor[0]).to(device)
-        inp_te = torch.tensor(input_tensor[1]).to(device)
-        outp_word = torch.tensor(target_tensor[0]).to(device)
-        outp_te = torch.tensor(target_tensor[1]).to(device)
+        inp_word = input_tensor[0].to(device)
+        inp_te = input_tensor[1].to(device)
+        outp_word = target_tensor[0].to(device)
+        outp_te = target_tensor[1].to(device)
+        
         
         t_f_r = teacher_force_ratio(iter ,n_iters)
         KLD_weight = kl_cost_annealing(iter, n_iters, KLD_weight_type)
