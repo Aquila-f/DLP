@@ -217,7 +217,7 @@ class VAE(nn.Module):
     
     def eva8(self, inp_word, inp_te, outp_word, outp_te, encoder_hidden, encoder_cell):
         input_length = inp_word.size(0)
-        target_length = out_word.size(0)
+        target_length = outp_word.size(0)
         
         for en_idx in range(input_length):
             encoder_output, encoder_hidden, encoder_cell = self.encoder(inp_word[en_idx], encoder_hidden, encoder_cell)
@@ -466,7 +466,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             print('bleu_score : {}, gaussian_score_score : {}'.format(bleu_score, gaussian_score))
             print('+-------------------------------------------------------------------------+')
         
-        if iter%50000==0:
+        if iter == 50000:
             print(plot_celosses)
             print(plot_kllosses)
             print(plot_bleu)
