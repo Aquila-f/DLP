@@ -449,7 +449,7 @@ KLD_weight_type = 'mono'
 vae = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
 vae1 = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
 # model.load_state_dict(torch.load('save/ResNet18_maxacc{}'.format('82')))
-vae.load_state_dict(torch.load('bleumodel'))
+vae.load_state_dict(torch.load('gaussianmodel'))
 vae1.load_state_dict(torch.load('gaussianmodel'))
 trainIters(vae, vae1, 100000, LR, path, print_every=2000)
 
