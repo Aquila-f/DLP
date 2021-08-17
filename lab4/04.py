@@ -514,5 +514,6 @@ KLD_weight_type = 'mono'
 
 vae = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
 vae.load_state_dict(torch.load('cont2'))
+print('model load cont2...'))
 trainIters(vae, 100000, LR, path, print_every=2000)
 
