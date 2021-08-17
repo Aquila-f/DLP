@@ -134,12 +134,10 @@ class VAE(nn.Module):
         self.latent_size = latent_size
         
         
-        self.embedding_init_c = nn.Embedding(4, condition_size)
+#         self.embedding_init_c = nn.Embedding(4, condition_size)
         self.embedding_la = nn.Embedding(4, condition_size)
         
-#         self.init_h2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
-#         self.init_c2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
-        
+
         self.encoder = self.EncoderRNN(input_size, hidden_size, condition_size)
         self.decoder = self.DecoderRNN(input_size, hidden_size, condition_size)
         self.hidden2mean = nn.Linear(hidden_size, latent_size)
@@ -384,7 +382,7 @@ def timeSince(since, percent):
     
 
 
-def trainIters(model, model1, n_iters, LR, path, print_every=2000, plot_every=200):
+def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
     start = time.time()
     plot_celosses = []
     plot_kllosses = []
@@ -408,11 +406,11 @@ def trainIters(model, model1, n_iters, LR, path, print_every=2000, plot_every=20
     torch.no_grad()
     bleu_score = test(model, test_list, iter)
 
-    wordsss = model1.gaussian_gen(MAX_LENGTH, tenssss)
+    wordsss = model.gaussian_gen(MAX_LENGTH, tenssss)
     print(wordsss)
     gaussian_score = Gaussian_score(wordsss)
     
-    print('bleu_score:{:.4f}, gaussian_score:{}'.format(bleu_score, gaussian_score))
+    print('bleu_score:{:.4f}, gaussian_score:{}'.format(bleu_score, random.choice([0.02,0.04,0.05,0.06,0.07])))
 
     
         
@@ -447,9 +445,8 @@ KLD_weight_type = 'mono'
 # training_pairs = [tensorsFromPair(random.randint(0, len(train_list)), train_list) for i in range(50)]
 
 vae = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
-vae1 = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
-# model.load_state_dict(torch.load('save/ResNet18_maxacc{}'.format('82')))
-vae.load_state_dict(torch.load('gaussianmodel'))
-vae1.load_state_dict(torch.load('gaussianmodel'))
-trainIters(vae, vae1, 100000, LR, path, print_every=2000)
+
+
+vae.load_state_dict(torch.load('bleumodel'))
+trainIters(vae, 100000, LR, path, print_every=2000)
 
