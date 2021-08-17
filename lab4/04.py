@@ -252,8 +252,8 @@ class VAE(nn.Module):
         
         for n in range(100):
             word = []
-            latent_h = torch.randn_like(torch.zeros(1, 1, 32))
-            latent_c = torch.randn_like(torch.zeros(1, 1, 32))
+            latent_h = torch.randn_like(torch.zeros(1, 1, 32)).to(device)
+            latent_c = torch.randn_like(torch.zeros(1, 1, 32)).to(device)
             
             for tensor in tense:
                 decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(tensor).view(1, 1, -1)), dim = -1))
