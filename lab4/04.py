@@ -247,9 +247,9 @@ class VAE(nn.Module):
                 break
         return pred_idx
     
-    def gaussian_gen(self,maxlen):
+    def gaussian_gen(self,maxlen,tense):
         wordssss = []
-        tense = torch.tensor([[0],[1],[2],[3]])
+        
         for n in range(100):
             word = []
             latent_h = torch.randn_like(torch.zeros(1, 1, 32))
@@ -400,7 +400,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
     
     train_list = getdatafromtxt(path,'train')
     test_list = comptestlist(getdatafromtxt(path,'test'))
-
+    tenssss = torch.tensor([[0],[1],[2],[3]]).to(device)
     
     criterion = nn.CrossEntropyLoss()
 
@@ -432,7 +432,8 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             model.eval() 
             torch.no_grad()
             bleu_score = test(model, test_list, iter)
-            wordsss = model.gaussian_gen(MAX_LENGTH)
+            
+            wordsss = model.gaussian_gen(MAX_LENGTH, tenssss)
             gaussian_score = Gaussian_score(wordsss)
             
             if bleu_score > best_bleu:
