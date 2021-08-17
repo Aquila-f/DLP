@@ -134,8 +134,8 @@ class VAE(nn.Module):
         self.latent_size = latent_size
         
         
-        self.embedding_init_c = nn.Embedding(4, condition_size, device = device)
-        self.embedding_la = nn.Embedding(4, condition_size, device = device)
+        self.embedding_init_c = nn.Embedding(4, condition_size)
+        self.embedding_la = nn.Embedding(4, condition_size)
         
 #         self.init_h2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
 #         self.init_c2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
@@ -321,8 +321,8 @@ class VAE(nn.Module):
 def train(model, input_tensor, target_tensor, optimizer, criterion, teacher_force_ratio, kl_w):
     
     
-    encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1).to(device)), dim = -1)
-    encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1).to(device)), dim = -1)
+    encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(torch.tensor(input_tensor[1]).to(device)).view(1, 1, -1)), dim = -1)
+    encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
     
     optimizer.zero_grad()
     CEloss, KLloss = model(input_tensor, target_tensor, encoder_hidden, encoder_cell, teacher_force_ratio, criterion)
@@ -343,8 +343,8 @@ def test(model, testlist, epo):
 #         print(input_tensor)
 #         print(target_tensor)
         
-        encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1).to(device)), dim = -1)
-        encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1).to(device)), dim = -1)
+        encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
+        encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
         
         pred = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
         pred_txt = idx2word(pred)
