@@ -405,8 +405,8 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
     criterion = nn.CrossEntropyLoss()
 
     for iter in tqdm(range(1, n_iters + 1)):
-        if iter == 25000:
-            optimizer = optim.SGD(model.parameters(), lr=0.01)
+#         if iter == 25000:
+#             optimizer = optim.SGD(model.parameters(), lr=0.01)
         
         training_pair = tensorsFromPair(
             random.randint(0, len(train_list)-1), train_list)
