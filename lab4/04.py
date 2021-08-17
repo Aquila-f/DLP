@@ -191,7 +191,8 @@ class VAE(nn.Module):
         #----------sequence to sequence part for decoder----------#
 #         predict_idx = []
 #         pred_distribution = []
-
+        
+        outp_word = torch.tensor(target_tensor[0]).to(device)
         
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
         
@@ -199,8 +200,8 @@ class VAE(nn.Module):
         # Teacher forcing: Feed the target as the next input
             for de_idx in range(target_length):
                 decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
-                CEloss += criterion(decoder_output, target_tensor[0][de_idx])
-                decoder_input = target_tensor[0][de_idx]  # Teacher forcing
+                CEloss += criterion(decoder_output, outp_word[de_idx])
+                decoder_input = outp_word[de_idx]  # Teacher forcing
 #                 predict_idx.append(decoder_output.tolist())
 
         else:
@@ -210,7 +211,7 @@ class VAE(nn.Module):
                 topv, topi = decoder_output.topk(1)
                 decoder_input = topi.squeeze().detach()  # detach from history as input
                 
-                CEloss += criterion(decoder_output, target_tensor[0][de_idx])
+                CEloss += criterion(decoder_output, outp_word[de_idx])
                 if decoder_input.item() == EOS_token:
                     break
         
