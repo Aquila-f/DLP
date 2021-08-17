@@ -161,23 +161,25 @@ class VAE(nn.Module):
         input_length = input_tensor[0].size(0)
         target_length = target_tensor[0].size(0)
         CEloss = 0
+        inp_word = torch.tensor(input_tensor[0]).to(device)
+        inp_te = torch.tensor(input_tensor[1]).to(device)
         
         #----------sequence to sequence part for encoder----------#
         for en_idx in range(input_length):
-            encoder_output, encoder_hidden, encoder_cell = self.encoder(input_tensor[0][en_idx], encoder_hidden, encoder_cell)
+            encoder_output, encoder_hidden, encoder_cell = self.encoder(inp_word[en_idx], encoder_hidden, encoder_cell)
         
         #----------sequence to sequence part for latent----------#
         mean_h = self.hidden2mean(encoder_hidden)
         logvar_h = self.hidden2logvar(encoder_hidden)
         latent_h = self.Reparameterization_Trick(mean_h, logvar_h)
-        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
+        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(inp_te).view(1, 1, -1)), dim = -1))
         KLloss_h = -0.5 * torch.sum(1 + logvar_h - mean_h**2 - logvar_h.exp())
 
 
         mean_c = self.cell2mean(encoder_cell)
         logvar_c = self.cell2logvar(encoder_cell)
         latent_c = self.Reparameterization_Trick(mean_c, logvar_c)
-        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
+        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(inp_te).view(1, 1, -1)), dim = -1))
         KLloss_c = -0.5 * torch.sum(1 + logvar_c - mean_c**2 - logvar_c.exp())
 
         
@@ -320,10 +322,10 @@ class VAE(nn.Module):
         
 def train(model, input_tensor, target_tensor, optimizer, criterion, teacher_force_ratio, kl_w):
     
-    inp_word = torch.tensor(input_tensor[1]).to(device)
+    inp_te = torch.tensor(input_tensor[1]).to(device)
     
-    encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(inp_word).view(1, 1, -1)), dim = -1)
-    encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(inp_word).view(1, 1, -1)), dim = -1)
+    encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(inp_te).view(1, 1, -1)), dim = -1)
+    encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(inp_te).view(1, 1, -1)), dim = -1)
     
     optimizer.zero_grad()
     CEloss, KLloss = model(input_tensor, target_tensor, encoder_hidden, encoder_cell, teacher_force_ratio, criterion)
@@ -341,12 +343,12 @@ def test(model, testlist, epo):
     for test_choose in testlist:
         input_tensor = test_choose[0]
         target_tensor = test_choose[1]
-        inp_word = torch.tensor(input_tensor).to(device)
+        inp_te = torch.tensor(input_tensor).to(device)
 #         print(input_tensor)
 #         print(target_tensor)
         
-        encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(inp_word).view(1, 1, -1)), dim = -1)
-        encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(inp_word).view(1, 1, -1)), dim = -1)
+        encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(inp_te).view(1, 1, -1)), dim = -1)
+        encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(inp_te).view(1, 1, -1)), dim = -1)
         
         pred = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
         pred_txt = idx2word(pred)
