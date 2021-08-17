@@ -472,10 +472,10 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             print('+-------------------------------------------------------------------------+')
         
         if iter == 50000:
-            print(plot_celosses)
-            print(plot_kllosses)
-            print(plot_bleu)
-            print(plot_gau)
+            print("'celoss' : {}".format(plot_celosses))
+            print("'klloss' : {}".format(plot_kllosses))
+            print("'bleu' : {}".format(plot_bleu))
+            print("'gru' : {}".format(plot_gau))
             
         
 
