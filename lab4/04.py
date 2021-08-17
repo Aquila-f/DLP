@@ -107,20 +107,20 @@ def Reparameterization_Trick(self, mean, logvar):
     eps = torch.randn_like(std)
     return mean + eps * std
 
-def teacher_force_ratio(epoch, total_epoch):
-    if epoch < 0: return 1
-    return 1-((epoch-0)/(total_epoch-0))
+def teacher_force_ratio(epoch, total_epoch, startfrom, most):
+    if epoch < startfrom: return 1
+    return 1-most*((epoch-startfrom)/(total_epoch-startfrom))
 
-def kl_cost_annealing(epoch, total_epoch, MonorCycl):
+def kl_cost_annealing(epoch, total_epoch, MonorCycl, klm_stf, klm_m, klc_c, klc_m):
     if MonorCycl == 'cycle':
-        rang = total_epoch/2
+        rang = total_epoch/klc_c
         li = rang/2
         zz = epoch%rang
-        if zz < li : return 1*(zz/li)
-        return 1
+        if zz < li : return klc_m*(zz/li)
+        return klc_m
     else:
-        if epoch < 20000: return 0
-        return 0.3*((epoch-20000)/total_epoch)
+        if epoch < klm_stf: return 0
+        return klm_m*((epoch-klm_stf)/total_epoch)
 
 
 
@@ -420,8 +420,8 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
         outp_te = target_tensor[1].to(device)
         
         
-        t_f_r = teacher_force_ratio(iter ,n_iters)
-        KLD_weight = kl_cost_annealing(iter, n_iters, KLD_weight_type)
+        t_f_r = teacher_force_ratio(iter ,n_iters, t_startfrom, t_most)
+        KLD_weight = kl_cost_annealing(iter, n_iters, KLD_weight_type, klm_stf, klm_m, klc_stf, klc_m)
         
         model.train()
         CEloss, KLloss, loss = train(model, inp_word, inp_te, outp_word, outp_te, optimizer, criterion, 
@@ -472,6 +472,8 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             print('+-------------------------------------------------------------------------+')
         
         if iter == 50000:
+            print("'klw' : kl_cost(, ),")
+            print("'tf' : tefor({}, {}),".format(t_startfrom, t_most))
             print("'celoss' : {},".format(plot_celosses))
             print("'klloss' : {},".format(plot_kllosses))
             print("'bleu' : {},".format(plot_bleu))
@@ -489,13 +491,20 @@ hidden_size = 256
 vocab_size = 28
 condition_size = 8
 latent_size = 32
-KLD_weight_type = 'cycle'
 LR = 0.08
 path = ''
 
 #------------
-# t_startfrom = 
+t_startfrom = 20000
+t_most = 0.3
+klm_stf = 0
+klm_m = 0
+klc_stf = 2
+klc_m = 0.25
+KLD_weight_type = 'cycle'
 
+
+# klm_stf, klm_m, klc_stf, klc_m
 
 
 # train_list = getdatafromtxt('')
