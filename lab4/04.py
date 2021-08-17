@@ -478,6 +478,8 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             print("'klloss' : {},".format(plot_kllosses))
             print("'bleu' : {},".format(plot_bleu))
             print("'gru' : {}".format(plot_gau))
+            torch.save(model.state_dict(),'cont1')
+            print('model save...')
             
         
 
@@ -495,9 +497,9 @@ LR = 0.1
 path = ''
 
 #------------
-t_startfrom = 15000
+t_startfrom = 25000
 t_most = 0.3
-klm_stf = 15000
+klm_stf = 25000
 klm_m = 0.3
 klc_c = 2
 klc_m = 0.25
