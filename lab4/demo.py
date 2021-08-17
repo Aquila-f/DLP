@@ -134,11 +134,8 @@ class VAE(nn.Module):
         self.latent_size = latent_size
         
         
-#         self.embedding_init_c = nn.Embedding(4, condition_size)
+        self.embedding_init_c = nn.Embedding(4, condition_size)
         self.embedding_la = nn.Embedding(4, condition_size)
-        
-#         self.init_h2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
-#         self.init_c2encoder = nn.Linear(hidden_size + condition_size, hidden_size)
         
         self.encoder = self.EncoderRNN(input_size, hidden_size, condition_size)
         self.decoder = self.DecoderRNN(input_size, hidden_size, condition_size)
@@ -336,7 +333,7 @@ def train(model, inp_word, inp_te, outp_word, outp_te, optimizer, criterion, tea
 def test(model, testlist, epo):
     
     bleu_Score = 0
-    pr = True
+    pr = True if epo%2000==0 else False
     if pr: print('Tense conversion')
     for test_choose in testlist:
         input_tensor = test_choose[0]
@@ -384,8 +381,8 @@ def timeSince(since, percent):
     
 
 
-def trainIters(model, model1, n_iters, LR, path, print_every=2000, plot_every=200):
-    start = time.time()
+def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
+
     plot_celosses = []
     plot_kllosses = []
     plot_bleu = []
@@ -403,18 +400,84 @@ def trainIters(model, model1, n_iters, LR, path, print_every=2000, plot_every=20
     tenssss = torch.tensor([[0],[1],[2],[3]]).to(device)
     
     criterion = nn.CrossEntropyLoss()
-    
-    model.eval() 
-    torch.no_grad()
-    bleu_score = test(model, test_list, iter)
 
-    wordsss = model1.gaussian_gen(MAX_LENGTH, tenssss)
-    print(wordsss)
-    gaussian_score = Gaussian_score(wordsss)
-    
-    print('bleu_score:{:.4f}, gaussian_score:{}'.format(bleu_score, gaussian_score))
-
-    
+    for iter in tqdm(range(1, n_iters + 1)):
+#         if iter == 25000:
+#             optimizer = optim.SGD(model.parameters(), lr=0.01)
+        
+        training_pair = tensorsFromPair(
+            random.randint(0, len(train_list)-1), train_list)
+        
+        input_tensor = training_pair[0]
+        target_tensor = training_pair[1]
+        
+        inp_word = input_tensor[0].to(device)
+        inp_te = input_tensor[1].to(device)
+        outp_word = target_tensor[0].to(device)
+        outp_te = target_tensor[1].to(device)
+        
+        
+        t_f_r = teacher_force_ratio(iter ,n_iters, t_startfrom, t_most)
+        KLD_weight = kl_cost_annealing(iter, n_iters, KLD_weight_type, klm_stf, klm_m, klc_c, klc_m)
+        
+        model.train()
+        CEloss, KLloss, loss = train(model, inp_word, inp_te, outp_word, outp_te, optimizer, criterion, 
+                                         t_f_r, KLD_weight)
+        
+        
+        CEloss_t += CEloss.item()
+        KLloss_t += KLloss.item()
+        print_loss_total += loss
+        
+        if iter % plot_every == 0:
+            model.eval() 
+            torch.no_grad()
+            bleu_score = test(model, test_list, iter)
+            
+            wordsss = model.gaussian_gen(MAX_LENGTH, tenssss)
+            gaussian_score = Gaussian_score(wordsss)
+            
+            if bleu_score > best_bleu:
+                best_bleu = bleu_score
+                torch.save(model.state_dict(),'bleumodel')
+                print('new_best_bleu : {}'.format(best_bleu))
+            
+            if gaussian_score > best_gau:
+                best_gau = gaussian_score
+                torch.save(model.state_dict(),'gaussianmodel')
+                print('new_best_gaussian : {}'.format(best_gau))
+                
+#             if gaussian_score > 0.8: print(wordsss)
+#             if bleu_score > best_bleu:
+#                 best_bleu = bleu_score
+#                 troch.save(model.state_dict(),'bleumodel')
+#                 print('new_best_bleu : {}'.format(bleu_score))
+                
+            plot_celosses.append(CEloss_t/plot_every)
+            plot_kllosses.append(KLloss_t/plot_every)
+            plot_bleu.append(bleu_score)
+            plot_gau.append(gaussian_score)
+            
+            CEloss_t = 0
+            KLloss_t = 0
+#             print('bleu_score : {}, gaussian_score_score : {}'.format(bleu_score, gaussian_score))
+            
+            
+            
+        if iter % print_every == 0:
+            print('bleu_score:{:.4f}, gaussian_score:{}, CEloss:{:.4f}, KLloss:{:.4f}'.format(bleu_score, gaussian_score, CEloss.item() ,KLloss.item()))
+            print('+-------------------------------------------------------------------------+')
+        
+        if iter == 50000:
+            print("'klw' : kl('{}', {}, {}, {}, {}),".format(KLD_weight_type, klm_stf, klm_m, klc_c, klc_m))
+            print("'tf' : tefor({}, {}),".format(t_startfrom, t_most))
+            print("'celoss' : {},".format(plot_celosses))
+            print("'klloss' : {},".format(plot_kllosses))
+            print("'bleu' : {},".format(plot_bleu))
+            print("'gru' : {}".format(plot_gau))
+            torch.save(model.state_dict(),'cont1')
+            print('model save...')
+            
         
 
     
@@ -427,13 +490,13 @@ hidden_size = 256
 vocab_size = 28
 condition_size = 8
 latent_size = 32
-LR = 0.1
+LR = 0.08
 path = ''
 
 #------------
-t_startfrom = 15000
+t_startfrom = 25000
 t_most = 0.1
-klm_stf = 15000
+klm_stf = 25000
 klm_m = 0.3
 klc_c = 2
 klc_m = 0.25
@@ -447,9 +510,5 @@ KLD_weight_type = 'mono'
 # training_pairs = [tensorsFromPair(random.randint(0, len(train_list)), train_list) for i in range(50)]
 
 vae = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
-vae1 = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
-# model.load_state_dict(torch.load('save/ResNet18_maxacc{}'.format('82')))
-vae.load_state_dict(torch.load('gaussianmodel'))
-vae1.load_state_dict(torch.load('gaussianmodel'))
-trainIters(vae, vae1, 100000, LR, path, print_every=2000)
+trainIters(vae, 100000, LR, path, print_every=2000)
 
