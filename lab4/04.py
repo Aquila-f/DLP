@@ -320,9 +320,10 @@ class VAE(nn.Module):
         
 def train(model, input_tensor, target_tensor, optimizer, criterion, teacher_force_ratio, kl_w):
     
+    inp_word = torch.tensor(input_tensor[1]).to(device)
     
-    encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(torch.tensor(input_tensor[1]).to(device)).view(1, 1, -1)), dim = -1)
-    encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
+    encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(inp_word).view(1, 1, -1)), dim = -1)
+    encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(inp_word).view(1, 1, -1)), dim = -1)
     
     optimizer.zero_grad()
     CEloss, KLloss = model(input_tensor, target_tensor, encoder_hidden, encoder_cell, teacher_force_ratio, criterion)
@@ -340,11 +341,12 @@ def test(model, testlist, epo):
     for test_choose in testlist:
         input_tensor = test_choose[0]
         target_tensor = test_choose[1]
+        inp_word = torch.tensor(input_tensor).to(device)
 #         print(input_tensor)
 #         print(target_tensor)
         
-        encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
-        encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
+        encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(inp_word).view(1, 1, -1)), dim = -1)
+        encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(inp_word).view(1, 1, -1)), dim = -1)
         
         pred = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
         pred_txt = idx2word(pred)
