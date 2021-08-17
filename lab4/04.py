@@ -116,8 +116,8 @@ def kl_cost_annealing(epoch, total_epoch, MonorCycl):
         rang = total_epoch/4
         li = rang/2
         zz = epoch%rang
-        if zz < li : return 0.3*(zz/li)
-        return 0.3
+        if zz < li : return 1*(zz/li)
+        return 1
     else:
         if epoch < 20000: return 0
         return 0.3*((epoch-20000)/total_epoch)
@@ -472,9 +472,9 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             print('+-------------------------------------------------------------------------+')
         
         if iter == 50000:
-            print("'celoss' : {}".format(plot_celosses))
-            print("'klloss' : {}".format(plot_kllosses))
-            print("'bleu' : {}".format(plot_bleu))
+            print("'celoss' : {},".format(plot_celosses))
+            print("'klloss' : {},".format(plot_kllosses))
+            print("'bleu' : {},".format(plot_bleu))
             print("'gru' : {}".format(plot_gau))
             
         
@@ -489,7 +489,7 @@ hidden_size = 256
 vocab_size = 28
 condition_size = 8
 latent_size = 32
-KLD_weight_type = 'mono'
+KLD_weight_type = 'cycle'
 LR = 0.08
 path = ''
 
