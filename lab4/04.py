@@ -421,7 +421,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
         
         
         t_f_r = teacher_force_ratio(iter ,n_iters, t_startfrom, t_most)
-        KLD_weight = kl_cost_annealing(iter, n_iters, KLD_weight_type, klm_stf, klm_m, klc_stf, klc_m)
+        KLD_weight = kl_cost_annealing(iter, n_iters, KLD_weight_type, klm_stf, klm_m, klc_c, klc_m)
         
         model.train()
         CEloss, KLloss, loss = train(model, inp_word, inp_te, outp_word, outp_te, optimizer, criterion, 
@@ -472,7 +472,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             print('+-------------------------------------------------------------------------+')
         
         if iter == 50000:
-            print("'klw' : kl_cost(, ),")
+            print("'klw' : kl({}, {}, {}, {}, {}),".format(KLD_weight_type, klm_stf, klm_m, klc_c, klc_m))
             print("'tf' : tefor({}, {}),".format(t_startfrom, t_most))
             print("'celoss' : {},".format(plot_celosses))
             print("'klloss' : {},".format(plot_kllosses))
@@ -491,17 +491,17 @@ hidden_size = 256
 vocab_size = 28
 condition_size = 8
 latent_size = 32
-LR = 0.08
+LR = 0.1
 path = ''
 
 #------------
 t_startfrom = 20000
 t_most = 0.3
-klm_stf = 0
-klm_m = 0
-klc_stf = 2
+klm_stf = 20000
+klm_m = 0.3
+klc_c = 2
 klc_m = 0.25
-KLD_weight_type = 'cycle'
+KLD_weight_type = 'mono'
 
 
 # klm_stf, klm_m, klc_stf, klc_m
