@@ -156,13 +156,12 @@ class VAE(nn.Module):
         return mean + eps * std
         
         
-    def forward(self, input_tensor, target_tensor, encoder_hidden, encoder_cell, teacher_forcing_ratio, criterion):
+    def forward(self, inp_word, inp_te, outp_word, outp_te, encoder_hidden, encoder_cell, teacher_forcing_ratio, criterion):
         
-        input_length = input_tensor[0].size(0)
-        target_length = target_tensor[0].size(0)
+        input_length = inp_word.size(0)
+        target_length = outp_word.size(0)
         CEloss = 0
-        inp_word = torch.tensor(input_tensor[0]).to(device)
-        inp_te = torch.tensor(input_tensor[1]).to(device)
+
         
         #----------sequence to sequence part for encoder----------#
         for en_idx in range(input_length):
@@ -192,7 +191,6 @@ class VAE(nn.Module):
 #         predict_idx = []
 #         pred_distribution = []
         
-        outp_word = torch.tensor(target_tensor[0]).to(device)
         
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
         
@@ -217,26 +215,26 @@ class VAE(nn.Module):
         
         return CEloss/target_length, KLloss
     
-    def eva8(self, input_tensor, target_tensor, encoder_hidden, encoder_cell):
-        input_length = input_tensor[0].size(0)
-        target_length = target_tensor[0].size(0)
+    def eva8(self, inp_word, inp_te, outp_word, outp_te, encoder_hidden, encoder_cell):
+        input_length = inp_word.size(0)
+        target_length = out_word.size(0)
         
         for en_idx in range(input_length):
-            encoder_output, encoder_hidden, encoder_cell = self.encoder(input_tensor[0][en_idx], encoder_hidden, encoder_cell)
+            encoder_output, encoder_hidden, encoder_cell = self.encoder(inp_word[en_idx], encoder_hidden, encoder_cell)
         
         mean_h = self.hidden2mean(encoder_hidden)
         logvar_h = self.hidden2logvar(encoder_hidden)
         latent_h = self.Reparameterization_Trick(mean_h, logvar_h)
-        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
+        decoder_hidden = self.latent2decoder_h(torch.cat((latent_h, self.embedding_init_c(outp_te).view(1, 1, -1)), dim = -1))
         
         
         mean_c = self.cell2mean(encoder_cell)
         logvar_c = self.cell2logvar(encoder_cell)
         latent_c = self.Reparameterization_Trick(mean_c, logvar_c)
-        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(target_tensor[1]).view(1, 1, -1)), dim = -1))
+        decoder_cell = self.latent2decoder_c(torch.cat((latent_c, self.embedding_init_c(outp_te).view(1, 1, -1)), dim = -1))
         
         decoder_input = torch.tensor([[SOS_token]], device=device)
-        pred_idx = torch.tensor([])
+        pred_idx = torch.tensor([]).to(device)
         
         for de_idx in range(target_length):
             decoder_output, decoder_hidden, decoder_cell = self.decoder(decoder_input, decoder_hidden, decoder_cell)
@@ -321,15 +319,14 @@ class VAE(nn.Module):
         def initHidden(self):
             return torch.zeros(1, 1, self.hidden_size, device=device)
         
-def train(model, input_tensor, target_tensor, optimizer, criterion, teacher_force_ratio, kl_w):
+def train(model, inp_word, inp_te, outp_word, outp_te, optimizer, criterion, teacher_force_ratio, kl_w):
     
-    inp_te = torch.tensor(input_tensor[1]).to(device)
     
     encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(inp_te).view(1, 1, -1)), dim = -1)
     encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(inp_te).view(1, 1, -1)), dim = -1)
     
     optimizer.zero_grad()
-    CEloss, KLloss = model(input_tensor, target_tensor, encoder_hidden, encoder_cell, teacher_force_ratio, criterion)
+    CEloss, KLloss = model(inp_word, inp_te, outp_word, outp_te, encoder_hidden, encoder_cell, teacher_force_ratio, criterion)
     loss = CEloss + kl_w * KLloss
     loss.backward()
     optimizer.step()
@@ -344,17 +341,22 @@ def test(model, testlist, epo):
     for test_choose in testlist:
         input_tensor = test_choose[0]
         target_tensor = test_choose[1]
-        inp_te = torch.tensor(input_tensor).to(device)
+        
+        inp_word = torch.tensor(input_tensor[0]).to(device)
+        inp_te = torch.tensor(input_tensor[1]).to(device)
+        outp_word = torch.tensor(target_tensor[0]).to(device)
+        outp_te = torch.tensor(target_tensor[1]).to(device)
+        
 #         print(input_tensor)
 #         print(target_tensor)
-        
+#         inp_word, inp_te, outp_word, outp_te
         encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(inp_te).view(1, 1, -1)), dim = -1)
         encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(inp_te).view(1, 1, -1)), dim = -1)
         
-        pred = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
+        pred = model.eva8(inp_word, inp_te, outp_word, outp_te, encoder_hidden, encoder_cell)
         pred_txt = idx2word(pred)
-        label = idx2word(target_tensor[0].to(device))
-        inp = idx2word(input_tensor[0].to(device))
+        label = idx2word(target_tensor[0])
+        inp = idx2word(input_tensor[0])
         bleu_Score += compute_bleu(pred_txt, label)
         if pr:
             print('Input: {:13}Target: {:13}Prediction: {:13}'.format(inp, label, pred_txt))
@@ -408,11 +410,17 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
         
         input_tensor = training_pair[0]
         target_tensor = training_pair[1]
+        
+        inp_word = torch.tensor(input_tensor[0]).to(device)
+        inp_te = torch.tensor(input_tensor[1]).to(device)
+        outp_word = torch.tensor(target_tensor[0]).to(device)
+        outp_te = torch.tensor(target_tensor[1]).to(device)
+        
         t_f_r = teacher_force_ratio(iter ,n_iters)
         KLD_weight = kl_cost_annealing(iter, n_iters, KLD_weight_type)
         
         model.train()
-        CEloss, KLloss, loss = train(model, input_tensor, target_tensor, optimizer, criterion, 
+        CEloss, KLloss, loss = train(model, inp_word, inp_te, outp_word, outp_te, optimizer, criterion, 
                                          t_f_r, KLD_weight)
         
         
