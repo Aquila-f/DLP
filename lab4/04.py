@@ -385,7 +385,7 @@ def timeSince(since, percent):
 
 
 def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
-    start = time.time()
+
     plot_celosses = []
     plot_kllosses = []
     plot_bleu = []
@@ -493,7 +493,7 @@ hidden_size = 256
 vocab_size = 28
 condition_size = 8
 latent_size = 32
-LR = 0.1
+LR = 0.08
 path = ''
 
 #------------
