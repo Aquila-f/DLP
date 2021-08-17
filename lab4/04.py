@@ -343,8 +343,8 @@ def test(model, testlist, epo):
 #         print(input_tensor)
 #         print(target_tensor)
         
-        encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
-        encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1)), dim = -1)
+        encoder_hidden = torch.cat((model.encoder.initHidden(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1).to(device)), dim = -1)
+        encoder_cell = torch.cat((model.encoder.initCell(), model.embedding_init_c(input_tensor[1]).view(1, 1, -1).to(device)), dim = -1)
         
         pred = model.eva8(input_tensor, target_tensor, encoder_hidden, encoder_cell)
         pred_txt = idx2word(pred)
