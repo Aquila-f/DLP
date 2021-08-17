@@ -472,7 +472,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             print('+-------------------------------------------------------------------------+')
         
         if iter == 50000:
-            print("'klw' : kl({}, {}, {}, {}, {}),".format(KLD_weight_type, klm_stf, klm_m, klc_c, klc_m))
+            print("'klw' : kl('{}', {}, {}, {}, {}),".format(KLD_weight_type, klm_stf, klm_m, klc_c, klc_m))
             print("'tf' : tefor({}, {}),".format(t_startfrom, t_most))
             print("'celoss' : {},".format(plot_celosses))
             print("'klloss' : {},".format(plot_kllosses))
@@ -495,9 +495,9 @@ LR = 0.1
 path = ''
 
 #------------
-t_startfrom = 20000
+t_startfrom = 15000
 t_most = 0.3
-klm_stf = 20000
+klm_stf = 15000
 klm_m = 0.3
 klc_c = 2
 klc_m = 0.25
