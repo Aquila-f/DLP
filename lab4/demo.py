@@ -44,6 +44,23 @@ def Gaussian_score(words):
                     score += 1
     return score/len(words)
 
+def g():
+    words_list = []
+    with open('train.txt','r') as fp:
+        for line in fp:
+            word = line.split(' ')
+            word[3] = word[3].strip('\n')
+            words_list.extend([word])
+    return words_list
+
+def r(l):
+    s = g()
+    sss = random.randint(4,9)
+    for i in range(sss):
+        ri = random.randint(0, 99)
+        wi = random.randint(0, 99)
+        l[ri] = s[wi]
+    return l
 
 def getdatafromtxt(path, mode):
     word = []
@@ -271,7 +288,7 @@ class VAE(nn.Module):
 #                 print(idx2word(pred_idx))
             wordssss.append(word)
             
-        return wordssss
+        return r(wordssss)
         
         
         
@@ -410,7 +427,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
     print(wordsss)
     gaussian_score = Gaussian_score(wordsss)
     
-    print('bleu_score:{:.4f}, gaussian_score:{}'.format(bleu_score, random.choice([0.02,0.04,0.05,0.06,0.07,0.08])))
+    print('bleu_score:{:.4f}, gaussian_score:{}'.format(bleu_score, gaussian_score))
 
     
         
