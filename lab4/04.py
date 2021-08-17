@@ -108,12 +108,12 @@ def Reparameterization_Trick(self, mean, logvar):
     return mean + eps * std
 
 def teacher_force_ratio(epoch, total_epoch):
-    if epoch < 20000: return 1
-    return 1-0.3*((epoch-20000)/total_epoch)
+    if epoch < 0: return 1
+    return 1-((epoch-0)/(total_epoch-0))
 
 def kl_cost_annealing(epoch, total_epoch, MonorCycl):
     if MonorCycl == 'cycle':
-        rang = total_epoch/4
+        rang = total_epoch/2
         li = rang/2
         zz = epoch%rang
         if zz < li : return 1*(zz/li)
@@ -492,6 +492,11 @@ latent_size = 32
 KLD_weight_type = 'cycle'
 LR = 0.08
 path = ''
+
+#------------
+# t_startfrom = 
+
+
 
 # train_list = getdatafromtxt('')
 # training_pairs = [tensorsFromPair(random.randint(0, len(train_list)), train_list) for i in range(50)]
