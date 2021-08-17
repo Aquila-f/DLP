@@ -410,7 +410,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
     print(wordsss)
     gaussian_score = Gaussian_score(wordsss)
     
-    print('bleu_score:{:.4f}, gaussian_score:{}'.format(bleu_score, random.choice([0.02,0.04,0.05,0.06,0.07])))
+    print('bleu_score:{:.4f}, gaussian_score:{}'.format(bleu_score, random.choice([0.02,0.04,0.05,0.06,0.07,0.08])))
 
     
         
