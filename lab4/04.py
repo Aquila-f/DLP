@@ -478,7 +478,7 @@ def trainIters(model, n_iters, LR, path, print_every=2000, plot_every=200):
             print("'klloss' : {},".format(plot_kllosses))
             print("'bleu' : {},".format(plot_bleu))
             print("'gru' : {}".format(plot_gau))
-            torch.save(model.state_dict(),'cont1')
+            torch.save(model.state_dict(),'cont2')
             print('model save...')
             
         
@@ -513,5 +513,6 @@ KLD_weight_type = 'mono'
 # training_pairs = [tensorsFromPair(random.randint(0, len(train_list)), train_list) for i in range(50)]
 
 vae = VAE(vocab_size, hidden_size, condition_size, latent_size).to(device)
+vae.load_state_dict(torch.load('cont1'))
 trainIters(vae, 100000, LR, path, print_every=2000)
 
